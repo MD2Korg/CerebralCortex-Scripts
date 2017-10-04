@@ -31,31 +31,15 @@ from kafka import KafkaProducer
 
 
 class ReplayCerebralCortexData:
-    def __init__(self, start_time=None, end_time=None):
+    def __init__(self, kafka_broker, data_dir, start_time="", end_time=""):
         """
         Constructor
         :param configuration:
         """
-        # python3 replay_data.py 127.0.0.1:9092 data-folder-path start-time(opt) end-time(opt)
-
-        if not sys.argv[1]:
-            raise ValueError("Missing Kafka broker URL/IP and Port.")
-        elif not sys.argv[2]:
-            raise ValueError("Missing data directory path.")
-
-        try:
-            if sys.argv[3]:
-                self.start_time = start_time
-            elif sys.argv[4]:
-                self.end_time = end_time
-        except:
-            self.start_time = ""
-            self.end_time = ""
-
-        self.kafka_broker = sys.argv[1]
-        self.data_dir = sys.argv[2]
-        self.producer = KafkaProducer(bootstrap_servers=self.kafka_broker, api_version=(0, 10),
-                                      value_serializer=lambda v: json.dumps(v).encode('utf-8'))
+        self.start_time = start_time
+        self.end_time = end_time
+        self.kafka_broker = kafka_broker
+        self.data_dir = data_dir
         self.read_data_dir()
 
     def publish_filequeue(self, metadata, filename):
@@ -103,4 +87,20 @@ class ReplayCerebralCortexData:
             print("Yielding file:", metadata_filename, data_filename)
 
 
-ReplayCerebralCortexData(start_time=1506979290.049632, end_time=1506979309.049632)
+if __name__ == "__main__":
+    # python3 replay_data.py 127.0.0.1:9092 data-folder-path start-time(opt) end-time(opt)
+
+    if not sys.argv[1]:
+        raise ValueError("Missing Kafka broker URL/IP and Port.")
+    elif not sys.argv[2]:
+        raise ValueError("Missing data directory path.")
+
+    try:
+        if sys.argv[3]:
+            start_time = sys.argv[3]
+        elif sys.argv[4]:
+            end_time = sys.argv[4]
+    except:
+        start_time = ""
+        end_time = ""
+    ReplayCerebralCortexData(kafka_broker=sys.argv[1], data_dir=sys.argv[2], start_time=start_time, end_time=end_time)

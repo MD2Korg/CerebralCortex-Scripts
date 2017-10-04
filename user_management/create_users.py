@@ -39,6 +39,7 @@ class CreateUsers():
         :param configuration:
         """
         # python3 create_users.py 127.0.0.1 3306 root pass create
+        # python3 create_users.py 127.0.0.1 3306 root pass create user-name type
         # python3 create_users.py 127.0.0.1 3306 root pass list
         # python3 create_users.py 127.0.0.1 3306 root pass update username new-password
 
@@ -62,7 +63,20 @@ class CreateUsers():
         action = sys.argv[5]
 
         if action == "create":
-            self.create_random_users()
+            try:
+                if sys.argv[6]:
+                    self.username = sys.argv[6]
+                else:
+                    self.username=None
+                if sys.argv[7]:
+                    self.user_type = sys.argv[7]
+                else:
+                    self.user_type=None
+                self.create_random_users()
+            except:
+                self.username=None
+                self.user_type=None
+                self.create_random_users()
         elif action == "list":
             self.list_all_users()
         elif action == "delete":
@@ -80,32 +94,41 @@ class CreateUsers():
         """
         :param total_users:
         """
+
         user_creation_datetime = datetime.now()
         qry = "INSERT INTO " + self.userTable + " (identifier, username, password, token, user_role, user_metadata, active, confirmed_at) VALUES(%s, %s, %s, %s, %s, %s, %s, %s)"
 
-        # generate pre-defined users
-        for user in self.defaultUsers:
+        if self.username!=None and self.user_type!=None:
             user_id = uuid.uuid4()
-            vals = str(user_id), str(user["username"]), str(self.encrypt_user_password(user["password"])), str(
-                user["password"]), str(user["type"]), "{}", "1", str(user_creation_datetime)
-            self.cursor.execute(qry, vals)
-            self.dbConnection.commit()
-        print("Created " + str(len(self.defaultUsers)) + " default users.")
-
-        # generate random users
-        for i in itertools.chain(range(1000, 1005), range(5000, 5004), range(9000, 9004)):
             random_password = self.gen_random_pass("varchar")
-            user_id = uuid.uuid4()
-            user_name = i
-            user_password = self.encrypt_user_password(random_password)
-            token = random_password
-            type = "participant"
-
-            vals = str(user_id), str(user_name), str(user_password), str(token), str(type), "{}", "1", str(
-                user_creation_datetime)
+            vals = str(user_id), str(self.username), str(self.encrypt_user_password(random_password)), str(random_password), str(self.user_type), "{}", "1", str(user_creation_datetime)
             self.cursor.execute(qry, vals)
             self.dbConnection.commit()
-        print("Created random users.")
+            print(self.username+" created.")
+        else:
+            # generate pre-defined users
+            for user in self.defaultUsers:
+                user_id = uuid.uuid4()
+                vals = str(user_id), str(user["username"]), str(self.encrypt_user_password(user["password"])), str(
+                    user["password"]), str(user["type"]), "{}", "1", str(user_creation_datetime)
+                self.cursor.execute(qry, vals)
+                self.dbConnection.commit()
+            print("Created " + str(len(self.defaultUsers)) + " default users.")
+
+            # generate random users
+            for i in itertools.chain(range(1000, 1005), range(5000, 5004), range(9000, 9004)):
+                random_password = self.gen_random_pass("varchar")
+                user_id = uuid.uuid4()
+                user_name = i
+                user_password = self.encrypt_user_password(random_password)
+                token = random_password
+                type = "participant"
+
+                vals = str(user_id), str(user_name), str(user_password), str(token), str(type), "{}", "1", str(
+                    user_creation_datetime)
+                self.cursor.execute(qry, vals)
+                self.dbConnection.commit()
+            print("Created random users.")
 
     def change_password(self, username, new_password):
         qry = "UPDATE "+self.userTable+" SET password=%s where username=%s"

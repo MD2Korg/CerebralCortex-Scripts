@@ -26,6 +26,7 @@ import glob
 import os
 import sys
 import json
+import argparse
 
 from kafka import KafkaProducer
 
@@ -90,17 +91,28 @@ class ReplayCerebralCortexData:
 if __name__ == "__main__":
     # python3 replay_data.py 127.0.0.1:9092 data-folder-path start-time(opt) end-time(opt)
 
-    if not sys.argv[1]:
+    parser = argparse.ArgumentParser(description='Replay all or part of cerebralcortex data.')
+    parser.add_argument("-b", "--broker", help="Kafka Broker IP and port", required=True)
+    parser.add_argument("-d", "--data", help="Data folder path. For example, /home/ali/data/", required=True)
+    parser.add_argument("-st", "--st", help="Start time (timestamp in milliseconds)", required=False)
+    parser.add_argument("-et", "--et", help="End time (timestamp in milliseconds)", required=False)
+    args = vars(parser.parse_args())
+
+    if not args["broker"]:
         raise ValueError("Missing Kafka broker URL/IP and Port.")
-    elif not sys.argv[2]:
+    elif not args["data"]:
         raise ValueError("Missing data directory path.")
 
     try:
-        if sys.argv[3]:
-            start_time = sys.argv[3]
-        elif sys.argv[4]:
-            end_time = sys.argv[4]
+        if args["st"]:
+            start_time = args["st"]
+        elif args["et"]:
+            end_time = args["et"]
+        else:
+            start_time = ""
+            end_time = ""
     except:
         start_time = ""
         end_time = ""
-    ReplayCerebralCortexData(kafka_broker=sys.argv[1], data_dir=sys.argv[2], start_time=start_time, end_time=end_time)
+
+    ReplayCerebralCortexData(kafka_broker=args["broker"], data_dir=args["data"], start_time=start_time, end_time=end_time)

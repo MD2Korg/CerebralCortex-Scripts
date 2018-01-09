@@ -81,10 +81,14 @@ class ReplayCerebralCortexData:
                 metadata = json.loads(metadata)
             except:
                 metadata = metadata
-            producer.send("filequeue", {"metadata": metadata, "filename": data_filename})
+
+            base_path = self.data_dir[-46:]
+
+            producer.send("filequeue", {"metadata": metadata, "filename": base_path + data_filename})
             producer.flush()
             metadata_file.close()
             print("Yielding file:", metadata_filename, data_filename)
+        print("Total Messages:", len(filenames))
 
 
 if __name__ == "__main__":

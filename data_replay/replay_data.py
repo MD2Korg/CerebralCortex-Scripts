@@ -29,6 +29,15 @@ import argparse
 
 from kafka import KafkaProducer
 
+whitelist = [
+    'DATA_QUALITY--ACCELEROMETER--org.md2k.autosenseble--AUTOSENSE_BLE--CHEST',
+    'DATA_QUALITY--RESPIRATION--org.md2k.autosenseble--AUTOSENSE_BLE--CHEST',
+    'DATA_QUALITY--LED--org.md2k.motionsense--MOTION_SENSE_HRV--RIGHT_WRIST',
+    'DATA_QUALITY--LED--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST',
+    'DATA_QUALITY--ACCELEROMETER--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST',
+    'DATA_QUALITY--ACCELEROMETER--org.md2k.motionsense--MOTION_SENSE_HRV--RIGHT_WRIST'
+]
+
 
 class ReplayCerebralCortexData:
     def __init__(self, kafka_broker, data_dir, start_time="", end_time=""):
@@ -82,12 +91,18 @@ class ReplayCerebralCortexData:
             except:
                 metadata = metadata
 
-            base_path = self.data_dir[-46:]
 
-            producer.send("filequeue", {"metadata": metadata, "filename": base_path + data_filename})
-            producer.flush()
+            if metadata['name'] in whitelist:
+
+                base_path = self.data_dir[-46:]
+                
+                producer.send("filequeue", {"metadata": metadata, "filename": base_path + data_filename})
+
+
+                print("Yielding file:", metadata['name'], metadata_filename, data_filename)
             metadata_file.close()
-            print("Yielding file:", metadata_filename, data_filename)
+
+        producer.flush()
         print("Total Messages:", len(filenames))
 
 

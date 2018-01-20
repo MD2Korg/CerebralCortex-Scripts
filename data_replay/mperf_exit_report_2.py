@@ -48,9 +48,10 @@ def process_participant(p):
     basedir = os.path.join(directory,p)
     participant_data = {}
     UUID_mapping = {}
-    
+    SIZE_mapping = {}
     for datedir in scandir(basedir):
         if datedir.is_dir:
+            print('Processing:',p, datedir.name)
             for ds in scandir(datedir):
                 if ds.is_dir:
                     for f in scandir(ds):
@@ -58,15 +59,35 @@ def process_participant(p):
                             with open(f,'r') as input_file:
                                 metadata = json.loads(input_file.read())
                                 
-                                if metadata['identifier'] not in UUID_mapping and ('DATA_QUALITY--' in metadata['name'] or 'ACCELEROMETER--org.md2k.motionsense--' in metadata['name']):
+                                if metadata['identifier'] not in UUID_mapping and 'DATA_QUALITY--' in metadata['name']:
                                     UUID_mapping[metadata['identifier']] = metadata['name']
-                                    print(p,metadata['identifier'],metadata['name'])
+                                    #print(p,metadata['identifier'],metadata['name'])
+
+                                if metadata['identifier'] not in SIZE_mapping and 'RAW--' in metadata['name']:
+                                    SIZE_mapping[metadata['identifier']] = metadata['name']
+                                    #print('SIZE',p,metadata['identifier'],metadata['name'])
+
                                 break
+
+
+                    if ds.name in SIZE_mapping:
+                        datasource = SIZE_mapping[ds.name]
+                        if datasource not in participant_data:
+                            participant_data[datasource] = {}
+
+                        for f in scandir(ds):
+                            if f.name[-3:] == '.gz':
+                                ts = datedir.name
+                                if ts not in participant_data[datasource]:
+                                    participant_data[datasource][ts] = (0,0)
+                                temp = participant_data[datasource][ts]
+                                participant_data[datasource][ts] = (temp[0] + 1, temp[1] + os.stat(f).st_size)
+                                #print(ts,participant_data[datasource][ts])
 
                                     
                     if ds.name in UUID_mapping:
-                        if UUID_mapping[ds.name] not in participant_data:
-                            datasource = UUID_mapping[ds.name]
+                        datasource = UUID_mapping[ds.name]
+                        if datasource not in participant_data:
                             participant_data[datasource] = {}
 
                         for f in scandir(ds):
@@ -90,7 +111,29 @@ def process_participant(p):
                                     #Corrupt file
                                     pass
 
+    fieldnames = set()
+    output = {}
+    for s in participant_data:
+        data = participant_data[s]
+        fieldnames.add('0_day')
+        fieldnames.add(s+'_Good')
+        fieldnames.add(s+'_Total')
+        for day in data:
+            if day not in output:
+                output[day] = {}
+                         
+            output[day]['0_day'] = day
+            output[day][s+'_Good'] = data[day][0]
+            output[day][s+'_Total'] = data[day][1]
 
+    fieldnames = sorted(list(fieldnames))
+    print(fieldnames)
+
+    with open(p + '_report.csv','w') as csvfileoutput:
+        writer = csv.DictWriter(csvfileoutput, fieldnames=fieldnames)
+        writer.writeheader()
+        for r in OrderedDict(sorted(output.items(), key=lambda t: t[0])):
+            writer.writerow(output[r])
 
     return participant_data
 
@@ -104,17 +147,11 @@ if __name__ == '__main__':
             participants.append(f.name)
 
 
-    print(participants)
+    participants = participants[:32]
 
-    p = Pool(2)
+    #print(participants)
 
-    pprint(p.map(process_participant, participants))
-    
-#    for p in participants:
-#        pprint(process_participant(directory,p))
-        
-    #     with open(participant + '_report.csv','w') as csvfileoutput:
-    #         writer = csv.DictWriter(csvfileoutput, fieldnames=fieldnames)
-    #         writer.writeheader()
-    #         for r in OrderedDict(sorted(output.items(), key=lambda t: t[0])):
-    #             writer.writerow(output[r])
+    p = Pool(8)
+
+    p.map(process_participant, participants)
+    print("DONE")

@@ -1,0 +1,11 @@
+mysql:
+  host: 127.0.0.1
+  port: 3306
+  database: cerebralcortex_server
+  db_user: root
+  db_pass: pass
+  datastream_table: stream
+  user_table: user
+
+data:
+  dir: "/home/ali/IdeaProjects/MD2K_DATA/data/raw/"

@@ -44,34 +44,34 @@ for f in scandir(directory):
         identifiers[id][f.name[11:-4]] = f
 
 
-
-
-fieldnames = ['day', 'left_good','left_total','right_good','right_total']
+fieldnames = ['day', 'motionsense_left_led_good','motionsense_left_led_total','motionsense_right_led_good','motionsense_right_led_total', 'motionsense_left_accel_good','motionsense_left_accel_total','motionsense_right_accel_good','motionsense_right_accel_total', 'autosense_ble_respiration_good','autosense_ble_respiration_total', 'autosense_ble_accel_good', 'autosense_ble_accel_total']
 for participant in identifiers:
     print("Processing:",participant)
     output = OrderedDict()
     for f in identifiers[participant]:
-        with open(identifiers[participant][f], 'rt') as inputfile:
-            csvfile = csv.reader(inputfile)
-            next(csvfile, None)  # skip the headers
-            
-            for r in csvfile:
-                day = r[0]
-                good = r[1]
-                total = reduce(lambda x,y: float(x)+float(y), r[1:])
-                
-                if day not in output:
-                    output[day] = OrderedDict()
+        if identifiers[participant][f].is_file:
+            with open(identifiers[participant][f], 'rt') as inputfile:
+                csvfile = csv.reader(inputfile)
+                next(csvfile, None)  # skip the headers
+                next(csvfile, None)  # skip the headers
 
-                output[day]['day'] = day
-                output[day][f+'_good'] = good
-                output[day][f+'_total'] = total
+                
+                for r in csvfile:
+                    day = r[0]
+                    good = r[1]
+                    total = r[2]#reduce(lambda x,y: float(x)+float(y), r[1:])
+                
+                    if day not in output:
+                        output[day] = OrderedDict()
+
+                    output[day]['day'] = day
+                    output[day][f+'_good'] = good
+                    output[day][f+'_total'] = total
 
 #    pprint(output)
     
     with open(participant + '_report.csv','w') as csvfileoutput:
         writer = csv.DictWriter(csvfileoutput, fieldnames=fieldnames)
         writer.writeheader()
-        for r in output:
+        for r in OrderedDict(sorted(output.items(), key=lambda t: t[0])):
             writer.writerow(output[r])
-

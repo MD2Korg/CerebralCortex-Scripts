@@ -57,7 +57,7 @@ class ReplayCerebralCortexData:
     def read_data_dir(self):
 
         self.data_dir = self.data_dir
-        filenames = list(filter(os.path.isfile, glob.glob(self.data_dir + "*.gz")))
+        filenames = list(filter(os.path.isfile, glob.glob(self.data_dir+ "*/*/*.gz")))
         if self.start_time or self.end_time:
             filenames = list(filter(lambda x: self.filter_filenames(x), filenames))
         filenames.sort(key=lambda x: os.path.getmtime(x))
@@ -94,7 +94,7 @@ class ReplayCerebralCortexData:
 
             #if metadata['name'] in whitelist:
 
-            base_path = self.data_dir[-46:]
+            base_path = self.data_dir[-36:]
                 
             producer.send("filequeue", {"metadata": metadata, "filename": base_path + data_filename})
 

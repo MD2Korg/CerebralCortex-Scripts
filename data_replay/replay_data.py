@@ -94,7 +94,7 @@ class ReplayCerebralCortexData:
 
             #if metadata['name'] in whitelist:
 
-            base_path = self.data_dir[-36:]
+            base_path = self.data_dir[-37:]
                 
             producer.send("filequeue", {"metadata": metadata, "filename": base_path + data_filename})
 

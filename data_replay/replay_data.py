@@ -49,20 +49,36 @@ class ReplayCerebralCortexData:
         self.end_time = end_time
         self.kafka_broker = kafka_broker
         self.data_dir = data_dir
+        self.producer = KafkaProducer(bootstrap_servers=self.kafka_broker, api_version=(0, 10),
+                                 value_serializer=lambda v: json.dumps(v).encode('utf-8'))
         self.read_data_dir()
 
     def publish_filequeue(self, metadata, filename):
         self.producer("filequeue", {"metadata": metadata, "filename": filename})
 
     def read_data_dir(self):
+        data_dirs_dict = []
+        days_dirs = [entry.path for entry in os.scandir(self.data_dir) if entry.is_dir()]
 
-        self.data_dir = self.data_dir
-        filenames = list(filter(os.path.isfile, glob.glob(self.data_dir+ "*/*/*.gz")))
-        if self.start_time or self.end_time:
-            filenames = list(filter(lambda x: self.filter_filenames(x), filenames))
-        filenames.sort(key=lambda x: os.path.getmtime(x))
+        for day_dir in days_dirs:
+            streams_dirs = [entry.path for entry in os.scandir(day_dir) if entry.is_dir()]
 
-        self.produce_kafka_message(filenames)
+            for stream_dir in streams_dirs:
+                tmp = stream_dir.split("/")[-3:]
+                user_id  = tmp[0]
+                day = tmp[1]
+                stream_id = tmp[2]
+                files_list = list(filter(os.path.isfile, glob.glob(stream_dir+ "/*.gz")))
+                data_dirs_dict.append({"user_id": user_id, "day": day, "stream_id": stream_id, "files_list": files_list})
+
+        #TODO: time based replay needs to be updated
+        #filenames = list(filter(os.path.isfile, glob.glob(self.data_dir+ "*/*/*/*.gz")))
+        # if self.start_time or self.end_time:
+        #     filenames = list(filter(lambda x: self.filter_filenames(x), filenames))
+        # else:
+        #     filenames.sort(key=lambda x: os.path.getmtime(x))
+
+        self.produce_kafka_message(data_dirs_dict)
 
     def filter_filenames(self, file_name):
         if self.start_time and not self.end_time:
@@ -77,33 +93,47 @@ class ReplayCerebralCortexData:
         else:
             return file_name
 
-    def produce_kafka_message(self, filenames):
-        producer = KafkaProducer(bootstrap_servers=self.kafka_broker, api_version=(0, 10),
-                                 value_serializer=lambda v: json.dumps(v).encode('utf-8'))
-        for filename in filenames:
-            metadata_filename = filename.replace(".gz", ".json")
-            data_filename = filename.replace(self.data_dir, "")
+    def produce_kafka_message(self, data_dirs_dict):
+        is_metadata_read = 0
+        metadata = ""
+        for filename in data_dirs_dict:
+            base_dir_path = self.data_dir.replace(filename["user_id"],"")
+            day = filename["day"]
+            if day!=filename["day"]:
+                pass
+            if filename["files_list"][0]:
+                metadata_filename = filename["files_list"][0].replace(".gz", ".json")
+                metadata_file = open(metadata_filename, 'r')
+                metadata = metadata_file.read()
+                metadata_file.close()
+                try:
+                    metadata = json.loads(metadata)
+                except:
+                    metadata = metadata
+                is_metadata_read = 1
 
-            metadata_file = open(metadata_filename, 'r')
-            metadata = metadata_file.read()
-            try:
-                metadata = json.loads(metadata)
-            except:
-                metadata = metadata
+            files_list = ','.join(filename["files_list"])
+            files_list = files_list.replace(base_dir_path, "")
 
+            # data_filename = filename.replace(self.data_dir, "")
+            #
+            # metadata_file = open(metadata_filename, 'r')
+            # metadata = metadata_file.read()
+            # try:
+            #     metadata = json.loads(metadata)
+            # except:
+            #     metadata = metadata
 
             #if metadata['name'] in whitelist:
 
-            base_path = self.data_dir[-37:]
-                
-            producer.send("filequeue", {"metadata": metadata, "filename": base_path + data_filename})
+            #base_path = self.data_dir[-45:]
 
+            self.producer.send("filequeue", {"metadata": metadata, "filename": files_list})
 
-            print("Yielding file:", metadata['name'], metadata_filename, data_filename)
-            metadata_file.close()
+            print("Yielding file:", filename["files_list"][0])
 
-        producer.flush()
-        print("Total Messages:", len(filenames))
+        self.producer.flush()
+        print("Total Messages:", len(data_dirs_dict))
 
 
 if __name__ == "__main__":
@@ -133,4 +163,10 @@ if __name__ == "__main__":
         start_time = ""
         end_time = ""
 
-    ReplayCerebralCortexData(kafka_broker=args["broker"], data_dir=args["data"], start_time=start_time, end_time=end_time)
+    data_path = args["data"]
+    if (data_path[-1] != '/'):
+        data_path += '/'
+
+    data_dirs = [entry.path for entry in os.scandir(data_path) if entry.is_dir()]
+    for dir in data_dirs:
+        ReplayCerebralCortexData(kafka_broker=args["broker"], data_dir=dir, start_time=start_time, end_time=end_time)

@@ -141,11 +141,12 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Replay all or part of cerebralcortex data.')
     parser.add_argument("-b", "--broker", help="Kafka Broker IP and port", required=True)
-    parser.add_argument("-d", "--data", help="Data folder path. For example, /home/ali/data/", required=True)
+    parser.add_argument("-d", "--data", help="Data folder path. For example, -d /home/ali/data/", required=True)
+    parser.add_argument("-uid", "--user_id", help="User/Participant ID, For example, -uid UUID1,UUID2,UUID3", required=False)
     parser.add_argument("-st", "--st", help="Start time (timestamp in milliseconds)", required=False)
     parser.add_argument("-et", "--et", help="End time (timestamp in milliseconds)", required=False)
     args = vars(parser.parse_args())
-
+    data_dirs = []
     if not args["broker"]:
         raise ValueError("Missing Kafka broker URL/IP and Port.")
     elif not args["data"]:
@@ -167,6 +168,12 @@ if __name__ == "__main__":
     if (data_path[-1] != '/'):
         data_path += '/'
 
-    data_dirs = [entry.path for entry in os.scandir(data_path) if entry.is_dir()]
+    if args["user_id"]:
+        participant_ids = args["user_id"].split(",")
+        for participant_id in participant_ids:
+            data_dirs.append(data_path+participant_id.strip())
+    else:
+        data_dirs = [entry.path for entry in os.scandir(data_path) if entry.is_dir()]
+
     for dir in data_dirs:
         ReplayCerebralCortexData(kafka_broker=args["broker"], data_dir=dir, start_time=start_time, end_time=end_time)

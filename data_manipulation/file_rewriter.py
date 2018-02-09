@@ -128,4 +128,4 @@ if __name__ == '__main__':
 
     #p.map(process_participant, participants)
     for p in participants:
-        process_participa
+        process_participant(p)

@@ -24,9 +24,12 @@
 
 import glob
 import os
+import gzip
 import json
 import argparse
 
+# TODO: this labeling corrupt data labeling might not work due to unknown number of columns
+# TODO: use metadata (if it's corrected) to apply corrupt data filtering
 
 class LabelCorruptData:
     def __init__(self, data_dir):
@@ -38,46 +41,64 @@ class LabelCorruptData:
         self.read_data_dir()
 
     def read_data_dir(self):
-        data_dirs_dict = []
-
-        for day_dir in os.scandir(self.data_dir):
+        file_samples = []
+        corrupt_data = []
+        # dir structure "user-uuid/day/stream-uuid/filename.extension"
+        for day_dir in os.scandir(self.data_dir): # scan user-uuid directory, contains day folders
             if day_dir.is_dir():
-                for stream_dir in os.scandir(day_dir):
+                print("Processing: ", day_dir.path)
+                for stream_dir in os.scandir(day_dir): #scan day directory, contains stream uuid folders
                     if stream_dir.is_dir():
-                        files_list = list(filter(os.path.isfile, glob.glob(stream_dir+ "/*.gz")))
+                        files_list = list(filter(os.path.isfile, glob.glob(stream_dir.path+ "/*.gz")))
                         for filepath in files_list:
-                            self.process_file(filepath)
+                            if "bed5d03b-5f1f-31fa-b7b6-0c9f2bf7ab4a" not in filepath:
+                                file_samples.append({"filename": filepath, "sample": self.process_file(filepath)})
+                        # check what directories have different columns
+                        bad_entries = self.check(file_samples)
+                        if len(bad_entries)>0:
+                            corrupt_data.append({"stream_dir":stream_dir, "bad_files":self.check(file_samples)})
+                        file_samples = []
+        return corrupt_data
+
     def process_file(self,filepath):
-        participant_id
-    def produce_kafka_message(self, data_dirs_dict):
-        is_metadata_read = 0
-        metadata = ""
-        for filename in data_dirs_dict:
-            base_dir_path = self.data_dir.replace(filename["user_id"],"")
-            day = filename["day"]
-            if day!=filename["day"]:
-                pass
-            if filename["files_list"][0]:
-                metadata_filename = filename["files_list"][0].replace(".gz", ".json")
-                metadata_file = open(metadata_filename, 'r')
-                metadata = metadata_file.read()
-                metadata_file.close()
+        with gzip.open(filepath) as gzfile:
+            try:
+                return str(gzfile.readline(),"utf-8")
+            except:
+                return None
+
+    def check(self, file_samples: dict):
+        tmp = None
+        tmp2 = ""
+        bad_rows = []
+        for data in file_samples:
+            if "20171211" in data["filename"] and "4f2d6378-43fd-3c51-b418-d71beb72daa0" in data["filename"]:
+                print(data)
+            if data["sample"] is not None:
+                sample_size = self.convert_sample(data["sample"])
+                if tmp is None:
+                    tmp2 = data
+                    tmp = sample_size
+                elif tmp != sample_size:
+                    bad_rows.append(data)
+                else:
+                    tmp = sample_size
+        return bad_rows
+
+    def convert_sample(self, sample):
+        try:
+            if sample.startswith("[") or sample.startswith("{"):
+                return 1
+            else:
+                tmp = sample.split(",")[2]
                 try:
-                    metadata = json.loads(metadata)
+                    float(tmp)
+                    return len(list([float(x.strip()) for x in sample.split(',')]))
                 except:
-                    metadata = metadata
-                is_metadata_read = 1
+                    return 1
 
-            files_list = ','.join(filename["files_list"])
-            files_list = files_list.replace(base_dir_path, "")
-
-
-            self.producer.send("filequeue", {"metadata": metadata, "filename": files_list})
-
-            print("Yielding file:", filename["files_list"][0])
-
-        self.producer.flush()
-        print("Total Messages:", len(data_dirs_dict))
+        except:
+            return 1
 
 
 if __name__ == "__main__":
@@ -102,5 +123,5 @@ if __name__ == "__main__":
     else:
         data_dirs = [entry.path for entry in os.scandir(data_path) if entry.is_dir()]
 
-    for dir in data_dirs:
+    for dir in data_dirs: # scan all users uuid folders
         LabelCorruptData(data_dir=dir)

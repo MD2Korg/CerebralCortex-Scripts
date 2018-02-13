@@ -29,16 +29,6 @@ import argparse
 
 from kafka import KafkaProducer
 
-# whitelist = [
-#     'DATA_QUALITY--ACCELEROMETER--org.md2k.autosenseble--AUTOSENSE_BLE--CHEST',
-#     'DATA_QUALITY--RESPIRATION--org.md2k.autosenseble--AUTOSENSE_BLE--CHEST',
-#     'DATA_QUALITY--LED--org.md2k.motionsense--MOTION_SENSE_HRV--RIGHT_WRIST',
-#     'DATA_QUALITY--LED--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST',
-#     'DATA_QUALITY--ACCELEROMETER--org.md2k.motionsense--MOTION_SENSE_HRV--LEFT_WRIST',
-#     'DATA_QUALITY--ACCELEROMETER--org.md2k.motionsense--MOTION_SENSE_HRV--RIGHT_WRIST'
-# ]
-
-
 class ReplayCerebralCortexData:
     def __init__(self, kafka_broker, data_dir, start_time="", end_time=""):
         """
@@ -52,9 +42,6 @@ class ReplayCerebralCortexData:
         self.producer = KafkaProducer(bootstrap_servers=self.kafka_broker, api_version=(0, 10),
                                  value_serializer=lambda v: json.dumps(v).encode('utf-8'))
         self.read_data_dir()
-
-    def publish_filequeue(self, metadata, filename):
-        self.producer("filequeue", {"metadata": metadata, "filename": filename})
 
     def read_data_dir(self):
         data_dirs_dict = []
@@ -94,7 +81,6 @@ class ReplayCerebralCortexData:
             return file_name
 
     def produce_kafka_message(self, data_dirs_dict):
-        is_metadata_read = 0
         metadata = ""
         for filename in data_dirs_dict:
             base_dir_path = self.data_dir.replace(filename["user_id"],"")
@@ -110,23 +96,9 @@ class ReplayCerebralCortexData:
                     metadata = json.loads(metadata)
                 except:
                     metadata = metadata
-                is_metadata_read = 1
 
             files_list = ','.join(filename["files_list"])
             files_list = files_list.replace(base_dir_path, "")
-
-            # data_filename = filename.replace(self.data_dir, "")
-            #
-            # metadata_file = open(metadata_filename, 'r')
-            # metadata = metadata_file.read()
-            # try:
-            #     metadata = json.loads(metadata)
-            # except:
-            #     metadata = metadata
-
-            #if metadata['name'] in whitelist:
-
-            #base_path = self.data_dir[-45:]
 
             self.producer.send("filequeue", {"metadata": metadata, "filename": files_list})
 

@@ -48,15 +48,15 @@ class ReplayCerebralCortexData:
         days_dirs = [entry.path for entry in os.scandir(self.data_dir) if entry.is_dir()]
 
         for day_dir in days_dirs:
-            streams_dirs = [entry.path for entry in os.scandir(day_dir) if entry.is_dir()]
-
-            for stream_dir in streams_dirs:
-                tmp = stream_dir.split("/")[-3:]
-                user_id  = tmp[0]
-                day = tmp[1]
-                stream_id = tmp[2]
-                files_list = list(filter(os.path.isfile, glob.glob(stream_dir+ "/*.gz")))
-                data_dirs_dict.append({"user_id": user_id, "day": day, "stream_id": stream_id, "files_list": files_list})
+            for stream_dir in os.scandir(day_dir):
+                if stream_dir.is_dir():
+                    stream_dir = stream_dir.path
+                    tmp = stream_dir.split("/")[-3:]
+                    user_id  = tmp[0]
+                    day = tmp[1]
+                    stream_id = tmp[2]
+                    files_list = list(filter(os.path.isfile, glob.glob(stream_dir+ "/*.gz")))
+                    data_dirs_dict.append({"user_id": user_id, "day": day, "stream_id": stream_id, "files_list": files_list})
 
         #TODO: time based replay needs to be updated
         #filenames = list(filter(os.path.isfile, glob.glob(self.data_dir+ "*/*/*/*.gz")))

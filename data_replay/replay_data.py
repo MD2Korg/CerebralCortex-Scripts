@@ -100,7 +100,7 @@ class ReplayCerebralCortexData:
             files_list = ','.join(filename["files_list"])
             files_list = files_list.replace(base_dir_path, "")
 
-            self.producer.send("filequeue", {"metadata": metadata, "filename": files_list})
+            self.producer.send("nosql_filequeue", {"metadata": metadata, "filename": files_list})
 
             print("Yielding file:", filename["files_list"][0])
 

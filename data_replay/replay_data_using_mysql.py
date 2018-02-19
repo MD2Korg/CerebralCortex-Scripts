@@ -26,22 +26,27 @@ import glob
 import os
 import json
 import argparse
-
-from kafka import KafkaProducer
+import mysql.connector
 
 class ReplayCerebralCortexData:
-    def __init__(self, kafka_broker, data_dir, start_time="", end_time=""):
+    def __init__(self, mysql_host, mysql_database, mysql_username, mysql_password, data_dir):
         """
         Constructor
         :param configuration:
         """
-        self.start_time = start_time
-        self.end_time = end_time
-        self.kafka_broker = kafka_broker
         self.data_dir = data_dir
-        self.producer = KafkaProducer(bootstrap_servers=self.kafka_broker, api_version=(0, 10),
-                                 value_serializer=lambda v: json.dumps(v).encode('utf-8'))
+        self.mysql_con = mysql.connector.connect(user=mysql_username, password=mysql_password,
+                                     host=mysql_host,
+                                     database=mysql_database)
+        self.cursor = self.mysql_con.cursor(dictionary=True)
         self.read_data_dir()
+
+    def add_db(self, owner_id, stream_id, full_filename, metadata):
+
+        qry = "INSERT INTO data_replay (id, filename, metadata, processed) VALUES(%s, %s, %s, %s, %s, %s)"
+        vals = str(owner_id), str(stream_id), str(stream_name), json.dumps(
+            data_descriptor), json.dumps(execution_context), json.dumps(
+            annotations), stream_type, start_time, end_time
 
     def read_data_dir(self):
         data_dirs_dict = []
@@ -58,27 +63,6 @@ class ReplayCerebralCortexData:
                     files_list = list(filter(os.path.isfile, glob.glob(stream_dir+ "/*.gz")))
                     data_dirs_dict.append({"user_id": user_id, "day": day, "stream_id": stream_id, "files_list": files_list})
 
-        #TODO: time based replay needs to be updated
-        #filenames = list(filter(os.path.isfile, glob.glob(self.data_dir+ "*/*/*/*.gz")))
-        # if self.start_time or self.end_time:
-        #     filenames = list(filter(lambda x: self.filter_filenames(x), filenames))
-        # else:
-        #     filenames.sort(key=lambda x: os.path.getmtime(x))
-
-        self.produce_kafka_message(data_dirs_dict)
-
-    def filter_filenames(self, file_name):
-        if self.start_time and not self.end_time:
-            if os.path.getmtime(file_name) >= self.start_time:
-                return file_name
-        elif not self.start_time and self.end_time:
-            if os.path.getmtime(file_name) <= self.end_time:
-                return file_name
-        elif self.start_time and self.end_time:
-            if os.path.getmtime(file_name) >= self.start_time and os.path.getmtime(file_name) <= self.end_time:
-                return file_name
-        else:
-            return file_name
 
     def produce_kafka_message(self, data_dirs_dict):
         metadata = ""
@@ -109,43 +93,26 @@ class ReplayCerebralCortexData:
 
 
 if __name__ == "__main__":
-    # python3 replay_data.py 127.0.0.1:9092 data-folder-path start-time(opt) end-time(opt)
+    # python3 replay_data_using_kafka.py 127.0.0.1:9092 data-folder-path start-time(opt) end-time(opt)
 
     parser = argparse.ArgumentParser(description='Replay all or part of cerebralcortex data.')
-    parser.add_argument("-b", "--broker", help="Kafka Broker IP and port", required=True)
+    parser.add_argument("-mh", "--mysql_host", help="Kafka Broker IP and port", required=True)
+    parser.add_argument("-mp", "--mysql_database", help="Kafka Broker IP and port", required=True)
+    parser.add_argument("-mu", "--mysql_username", help="Kafka Broker IP and port", required=True)
+    parser.add_argument("-mpass", "--mysql_password", help="Kafka Broker IP and port", required=True)
     parser.add_argument("-d", "--data", help="Data folder path. For example, -d /home/ali/data/", required=True)
-    parser.add_argument("-uid", "--user_id", help="User/Participant ID, For example, -uid UUID1,UUID2,UUID3", required=False)
-    parser.add_argument("-st", "--st", help="Start time (timestamp in milliseconds)", required=False)
-    parser.add_argument("-et", "--et", help="End time (timestamp in milliseconds)", required=False)
+
     args = vars(parser.parse_args())
     data_dirs = []
-    if not args["broker"]:
-        raise ValueError("Missing Kafka broker URL/IP and Port.")
+    if not args["mysql_host"] or  not args["mysql_port"] or  not args["mysql_username"] or  not args["mysql_password"]:
+        raise ValueError("Missing MySQL host, ip, port, and/or password.")
     elif not args["data"]:
         raise ValueError("Missing data directory path.")
 
-    try:
-        if args["st"]:
-            start_time = args["st"]
-        elif args["et"]:
-            end_time = args["et"]
-        else:
-            start_time = ""
-            end_time = ""
-    except:
-        start_time = ""
-        end_time = ""
 
     data_path = args["data"]
     if (data_path[-1] != '/'):
         data_path += '/'
 
-    if args["user_id"]:
-        participant_ids = args["user_id"].split(",")
-        for participant_id in participant_ids:
-            data_dirs.append(data_path+participant_id.strip())
-    else:
-        data_dirs = [entry.path for entry in os.scandir(data_path) if entry.is_dir()]
-
     for dir in data_dirs:
-        ReplayCerebralCortexData(kafka_broker=args["broker"], data_dir=dir, start_time=start_time, end_time=end_time)
+        ReplayCerebralCortexData(mysql_host=args["mysql_host"], mysql_database=args["mysql_database"], mysql_username=args["mysql_username"], mysql_password=args["mysql_password"], data_dir=dir)

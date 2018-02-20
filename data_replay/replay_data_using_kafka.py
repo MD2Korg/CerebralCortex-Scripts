@@ -30,13 +30,11 @@ import argparse
 from kafka import KafkaProducer
 
 class ReplayCerebralCortexData:
-    def __init__(self, kafka_broker, data_dir, start_time="", end_time=""):
+    def __init__(self, kafka_broker, data_dir):
         """
         Constructor
         :param configuration:
         """
-        self.start_time = start_time
-        self.end_time = end_time
         self.kafka_broker = kafka_broker
         self.data_dir = data_dir
         self.producer = KafkaProducer(bootstrap_servers=self.kafka_broker, api_version=(0, 10),
@@ -45,40 +43,21 @@ class ReplayCerebralCortexData:
 
     def read_data_dir(self):
         data_dirs_dict = []
-        days_dirs = [entry.path for entry in os.scandir(self.data_dir) if entry.is_dir()]
-
-        for day_dir in days_dirs:
-            for stream_dir in os.scandir(day_dir):
-                if stream_dir.is_dir():
-                    stream_dir = stream_dir.path
-                    tmp = stream_dir.split("/")[-3:]
-                    user_id  = tmp[0]
-                    day = tmp[1]
-                    stream_id = tmp[2]
-                    files_list = list(filter(os.path.isfile, glob.glob(stream_dir+ "/*.gz")))
-                    data_dirs_dict.append({"user_id": user_id, "day": day, "stream_id": stream_id, "files_list": files_list})
-
-        #TODO: time based replay needs to be updated
-        #filenames = list(filter(os.path.isfile, glob.glob(self.data_dir+ "*/*/*/*.gz")))
-        # if self.start_time or self.end_time:
-        #     filenames = list(filter(lambda x: self.filter_filenames(x), filenames))
-        # else:
-        #     filenames.sort(key=lambda x: os.path.getmtime(x))
+        #days_dirs = [entry.path for entry in os.scandir(self.data_dir) if entry.is_dir()]
+        for day_dir in os.scandir(self.data_dir):
+            if day_dir.is_dir():
+                for stream_dir in os.scandir(day_dir):
+                    if stream_dir.is_dir():
+                        stream_dir = stream_dir.path
+                        tmp = stream_dir.split("/")[-3:]
+                        user_id  = tmp[0]
+                        day = tmp[1]
+                        stream_id = tmp[2]
+                        files_list = list(filter(os.path.isfile, glob.glob(stream_dir+ "/*.gz")))
+                        data_dirs_dict.append({"user_id": user_id, "day": day, "stream_id": stream_id, "files_list": files_list})
 
         self.produce_kafka_message(data_dirs_dict)
 
-    def filter_filenames(self, file_name):
-        if self.start_time and not self.end_time:
-            if os.path.getmtime(file_name) >= self.start_time:
-                return file_name
-        elif not self.start_time and self.end_time:
-            if os.path.getmtime(file_name) <= self.end_time:
-                return file_name
-        elif self.start_time and self.end_time:
-            if os.path.getmtime(file_name) >= self.start_time and os.path.getmtime(file_name) <= self.end_time:
-                return file_name
-        else:
-            return file_name
 
     def produce_kafka_message(self, data_dirs_dict):
         metadata = ""
@@ -115,26 +94,13 @@ if __name__ == "__main__":
     parser.add_argument("-b", "--broker", help="Kafka Broker IP and port", required=True)
     parser.add_argument("-d", "--data", help="Data folder path. For example, -d /home/ali/data/", required=True)
     parser.add_argument("-uid", "--user_id", help="User/Participant ID, For example, -uid UUID1,UUID2,UUID3", required=False)
-    parser.add_argument("-st", "--st", help="Start time (timestamp in milliseconds)", required=False)
-    parser.add_argument("-et", "--et", help="End time (timestamp in milliseconds)", required=False)
+
     args = vars(parser.parse_args())
     data_dirs = []
     if not args["broker"]:
         raise ValueError("Missing Kafka broker URL/IP and Port.")
     elif not args["data"]:
         raise ValueError("Missing data directory path.")
-
-    try:
-        if args["st"]:
-            start_time = args["st"]
-        elif args["et"]:
-            end_time = args["et"]
-        else:
-            start_time = ""
-            end_time = ""
-    except:
-        start_time = ""
-        end_time = ""
 
     data_path = args["data"]
     if (data_path[-1] != '/'):
@@ -148,4 +114,4 @@ if __name__ == "__main__":
         data_dirs = [entry.path for entry in os.scandir(data_path) if entry.is_dir()]
 
     for dir in data_dirs:
-        ReplayCerebralCortexData(kafka_broker=args["broker"], data_dir=dir, start_time=start_time, end_time=end_time)
+        ReplayCerebralCortexData(kafka_broker=args["broker"], data_dir=dir)

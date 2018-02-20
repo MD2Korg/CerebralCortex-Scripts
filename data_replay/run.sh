@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-python3.6 replay_data_using_kafka.py -b "127.0.0.1:9092" -d "/home/ali/IdeaProjects/MD2K_DATA/data/" -uid "00ab666c-afb8-476e-9872-6472b4e66b68"
+python3.6 replay_data_using_kafka.py -b "dagobah10dot.memphis.edu:9092" -d "/cerebralcortex/apiserver/data/" -uid "03ec3750-641a-4039-8b5d-74b485bde1ea,089cc9f8-044f-40d6-aca9-af76bf35e4d2,0990887a-6163-4c80-9c9e-468ea2598202,0a11d9aa-1e9c-4f5e-94cf-faa6e796a855,0bee012c-efcb-4512-8c29-13d0a935cb48,0c824653-a13b-4a4e-b907-660f1d8f8981,0ce0209c-ee94-4ef0-9bea-5caad065b103,3ca29402-0a0d-4f08-8f6c-5b57672809f6,290e568c-16e2-4656-8e04-7298f5884c48"

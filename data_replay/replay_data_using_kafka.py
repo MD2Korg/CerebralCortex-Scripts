@@ -29,6 +29,8 @@ import argparse
 
 from kafka import KafkaProducer
 
+BLACK_LIST = []
+
 class ReplayCerebralCortexData:
     def __init__(self, kafka_broker, data_dir):
         """
@@ -42,8 +44,6 @@ class ReplayCerebralCortexData:
         self.read_data_dir()
 
     def read_data_dir(self):
-        data_dirs_dict = []
-        #days_dirs = [entry.path for entry in os.scandir(self.data_dir) if entry.is_dir()]
         for day_dir in os.scandir(self.data_dir):
             if day_dir.is_dir():
                 for stream_dir in os.scandir(day_dir):
@@ -54,37 +54,35 @@ class ReplayCerebralCortexData:
                         day = tmp[1]
                         stream_id = tmp[2]
                         files_list = list(filter(os.path.isfile, glob.glob(stream_dir+ "/*.gz")))
-                        data_dirs_dict.append({"user_id": user_id, "day": day, "stream_id": stream_id, "files_list": files_list})
-
-        self.produce_kafka_message(data_dirs_dict)
+                        self.produce_kafka_message({"user_id": user_id, "day": day, "stream_id": stream_id, "files_list": files_list})
 
 
-    def produce_kafka_message(self, data_dirs_dict):
+    def produce_kafka_message(self, filename):
         metadata = ""
-        for filename in data_dirs_dict:
-            base_dir_path = self.data_dir.replace(filename["user_id"],"")
-            day = filename["day"]
-            if day!=filename["day"]:
-                pass
-            if filename["files_list"][0]:
-                metadata_filename = filename["files_list"][0].replace(".gz", ".json")
-                metadata_file = open(metadata_filename, 'r')
-                metadata = metadata_file.read()
-                metadata_file.close()
-                try:
-                    metadata = json.loads(metadata)
-                except:
-                    metadata = metadata
 
-            files_list = ','.join(filename["files_list"])
-            files_list = files_list.replace(base_dir_path, "")
+        base_dir_path = self.data_dir.replace(filename["user_id"],"")
+        day = filename["day"]
+        if day!=filename["day"]:
+            pass
+        if filename["files_list"][0]:
+            metadata_filename = filename["files_list"][0].replace(".gz", ".json")
+            metadata_file = open(metadata_filename, 'r')
+            metadata = metadata_file.read()
+            metadata_file.close()
+            try:
+                metadata = json.loads(metadata)
+            except:
+                metadata = metadata
 
-            self.producer.send("nosql_filequeue", {"metadata": metadata, "filename": files_list})
+        files_list = ','.join(filename["files_list"])
+        files_list = files_list.replace(base_dir_path, "")
 
-            print("Yielding file:", filename["files_list"][0])
+        self.producer.send("nosql_filequeue", {"metadata": metadata, "filename": files_list})
+
+        print("Yielding file:", filename["files_list"][0])
 
         self.producer.flush()
-        print("Total Messages:", len(data_dirs_dict))
+
 
 
 if __name__ == "__main__":

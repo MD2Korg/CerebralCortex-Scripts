@@ -44,8 +44,8 @@ class ReplayCerebralCortexData:
 
     def read_data_dir(self):
         for stream_dir in os.scandir(self.data_dir):
-            if stream_dir.is_dir:
-                for day_dir in os.scandir(stream_dir):
+            if stream_dir.is_dir():
+                for day_dir in os.scandir(stream_dir.path):
                     if day_dir.is_dir():
                         for stream_dir in os.scandir(day_dir):
                             if stream_dir.is_dir():

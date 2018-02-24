@@ -53,7 +53,11 @@ class ReplayCerebralCortexData:
                         user_id  = tmp[0]
                         day = tmp[1]
                         stream_id = tmp[2]
-                        files_list = list(filter(os.path.isfile, glob.glob(stream_dir+ "/*.gz")))
+                        #files_list = list(filter(os.path.isfile, glob.glob(stream_dir+ "/*.gz")))
+                        files_list = []
+                        for f in os.listdir(stream_dir):
+                            if f.endswith(".gz"):
+                                files_list.append(stream_dir+"/"+f)
                         self.produce_kafka_message({"user_id": user_id, "day": day, "stream_id": stream_id, "files_list": files_list})
 
 
@@ -62,8 +66,7 @@ class ReplayCerebralCortexData:
 
         base_dir_path = self.data_dir.replace(filename["user_id"],"")
         day = filename["day"]
-        if day!=filename["day"]:
-            pass
+
         if filename["files_list"][0]:
             metadata_filename = filename["files_list"][0].replace(".gz", ".json")
             metadata_file = open(metadata_filename, 'r')

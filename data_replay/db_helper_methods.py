@@ -120,8 +120,8 @@ class SqlData():
             for participant_id in participant_ids:
                 fields += '%s=%s and ' % ("owner_id", participant_id)
 
-            qry = "select * from data_replay where "+fields+" processed=0 and stream_name NOT REGEX "+bl_regex
+            qry = "select * from data_replay where "+fields+" processed=0 and stream_name NOT REGEXP "+bl_regex
         else:
-            qry = "select * from data_replay where stream_name NOT REGEX "+bl_regex+" and processed=0 ordered by id limit 20"
+            qry = "select * from data_replay where stream_name NOT REGEXP '"+bl_regex+"' and processed=0 order by id limit 20"
 
         return self.execute(qry)

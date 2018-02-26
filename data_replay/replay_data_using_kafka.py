@@ -44,24 +44,28 @@ class ReplayCerebralCortexData:
         if (self.data_dir[-1] != '/'):
             self.data_dir += '/'
 
+        self.producer = KafkaProducer(bootstrap_servers=self.kafka_broker, api_version=(0, 10),
+                                      value_serializer=lambda v: json.dumps(v).encode('utf-8'))
+
+        participant_ids = []
         if str(config["users"]["uuids"]).strip()!="":
             participant_ids = str(config["users"]["uuids"]).split(",")
 
         if self.replay_type=="filez":
-            pass
-        elif self.replay_type=="mydb":
             self.read_data_dir(participant_ids)
+        elif self.replay_type=="mydb":
+            self.db_data(participant_ids)
         else:
             raise ValueError("Replay type can only be filez or mydb")
-
-        self.producer = KafkaProducer(bootstrap_servers=self.kafka_broker, api_version=(0, 10),
-                                 value_serializer=lambda v: json.dumps(v).encode('utf-8'))
 
     def db_data(self, participant_ids):
         results = self.sqlData.get_data(participant_ids, self.blacklist_regex)
         if len(results)>0:
             for row in results:
-                self.produce_kafka_message({"user_id": row["owner_id"], "day": row["day"], "stream_id": row["stream_id"], "files_list": row["files_list"]})
+                files_list = []
+                for f in json.loads(row["files_list"]):
+                    files_list.append(self.data_dir+f)
+                self.produce_kafka_message({"user_id": row["owner_id"], "day": row["day"], "stream_id": row["stream_id"], "files_list": files_list})
         else:
             print("No record. You may need to run store_dirs_to_db.py if you want to use mydb data replay type.")
 
@@ -71,23 +75,22 @@ class ReplayCerebralCortexData:
             for participant_id in participant_ids:
                 data_dir.append(self.data_dir+participant_id.strip())
         else:
-            data_dir = self.data_dir
-
-        for day_dir in os.scandir(data_dir):
-            if day_dir.is_dir():
-                for stream_dir in os.scandir(day_dir):
-                    if stream_dir.is_dir():
-                        stream_dir = stream_dir.path
-                        tmp = stream_dir.split("/")[-3:]
-                        user_id  = tmp[0]
-                        day = tmp[1]
-                        stream_id = tmp[2]
-                        files_list = []
-                        for f in os.listdir(stream_dir):
-                            if f.endswith(".gz"):
-                                files_list.append(stream_dir+"/"+f)
-                        self.produce_kafka_message({"user_id": user_id, "day": day, "stream_id": stream_id, "files_list": files_list})
-
+            data_dir = [entry.path for entry in os.scandir(self.data_dir) if entry.is_dir()]
+        for participant in data_dir:
+            for day_dir in os.scandir(participant):
+                if day_dir.is_dir():
+                    for stream_dir in os.scandir(day_dir):
+                        if stream_dir.is_dir():
+                            stream_dir = stream_dir.path
+                            tmp = stream_dir.split("/")[-3:]
+                            user_id  = tmp[0]
+                            day = tmp[1]
+                            stream_id = tmp[2]
+                            files_list = []
+                            for f in os.listdir(stream_dir):
+                                if f.endswith(".gz"):
+                                    files_list.append(stream_dir+"/"+f)
+                            self.produce_kafka_message({"user_id": user_id, "day": day, "stream_id": stream_id, "files_list": files_list})
 
     def produce_kafka_message(self, filename):
         metadata = ""
@@ -113,8 +116,6 @@ class ReplayCerebralCortexData:
         print("Yielding file:", filename["files_list"][0])
 
         self.producer.flush()
-
-
 
 if __name__ == "__main__":
     with open("config.yml") as ymlfile:

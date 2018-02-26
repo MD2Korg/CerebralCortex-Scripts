@@ -17,8 +17,8 @@ mysql:
   study_table: study
 
 data_replay:
-  replay_type: "filez" # acceptable parameters are filez OR mydb
-  data_dir: ""
+  replay_type: "mydb" # acceptable parameters are filez OR mydb
+  data_dir: "/home/ali/IdeaProjects/MD2K_DATA/data/"
 
 users:
   uuids: "" # if no UUID specified then all users data will be replayed

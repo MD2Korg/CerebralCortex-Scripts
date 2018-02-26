@@ -1,0 +1,32 @@
+#########################################################################
+###################### CerebralCortex Scripts Config ####################
+#########################################################################
+
+mysql:
+  host: 127.0.0.1
+  port: 3306
+  connection_pool_name: "CC_Pool"
+  connection_pool_size: 1
+  database: cerebralcortex
+  db_user: root
+  db_pass: pass
+  datastream_table: stream
+  kafka_offsets_table: kafka_offsets
+  processing_module_table: processing_module
+  user_table: user
+  study_table: study
+
+data_replay:
+  replay_type: "filez" # acceptable parameters are filez OR mydb
+  data_dir: ""
+
+users:
+  uuids: "" # if no UUID specified then all users data will be replayed
+
+blacklist:
+  blre1: '^BEACON--org.md2k.beacon--BEACON--([0-9A-F]+:){5}[0-9A-F]+$' #for now only one regex is allowed
+#########################################################################
+########################### KAFKA Config ################################
+#########################################################################
+kafkaserver:
+  host: 127.0.0.1:9092

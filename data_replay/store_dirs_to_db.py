@@ -25,21 +25,21 @@
 
 import os
 import json
-import argparse
-import mysql.connector
-
+import yaml
+from data_replay.db_helper_methods import SqlData
 
 class ReplayCerebralCortexData:
-    def __init__(self, mysql_host, mysql_database, mysql_username, mysql_password, data_dir):
+    def __init__(self, config):
         """
         Constructor
         :param configuration:
         """
-        self.data_dir = data_dir
-        self.mysql_con = mysql.connector.connect(user=mysql_username, password=mysql_password,
-                                     host=mysql_host,
-                                     database=mysql_database)
-        self.cursor = self.mysql_con.cursor(dictionary=True)
+        self.config = config
+        self.data_dir = self.config["data_replay"]["data_dir"]
+        if (self.data_dir[-1] != '/'):
+            self.data_dir += '/'
+
+        self.sqlData = SqlData()
         self.read_data_dir()
 
     def read_data_dir(self):
@@ -66,36 +66,11 @@ class ReplayCerebralCortexData:
                                     metadata = mtd.read()
                                 metadata = json.loads(metadata)
                                 stream_name = metadata["name"]
-                                self.add_to_db(owner_id, stream_id, stream_name, day, files_list, dir_size, metadata)
-
-    def add_to_db(self, owner_id, stream_id, stream_name, day, files_list, dir_size, metadata):
-        qry = "INSERT IGNORE INTO data_replay (owner_id, stream_id, stream_name, day, files_list, dir_size, metadata) VALUES(%s, %s, %s, %s, %s, %s, %s)"
-        vals = str(owner_id), str(stream_id), str(stream_name), str(day), json.dumps(files_list), dir_size, json.dumps(metadata)
-        self.cursor.execute(qry, vals)
-        self.mysql_con.commit()
-
+                                self.sqlData.add_to_db(owner_id, stream_id, stream_name, day, files_list, dir_size, metadata)
 
 if __name__ == "__main__":
-    # python3 replay_data_using_kafka.py 127.0.0.1:9092 data-folder-path start-time(opt) end-time(opt)
 
-    parser = argparse.ArgumentParser(description='Replay all or part of cerebralcortex data.')
-    parser.add_argument("-mh", "--mysql_host", help="Mysql Host:port", required=True)
-    parser.add_argument("-md", "--mysql_database", help="MySQL database name", required=True)
-    parser.add_argument("-mu", "--mysql_username", help="MySQL user name", required=True)
-    parser.add_argument("-mp", "--mysql_password", help="MySQL password", required=True)
-    parser.add_argument("-d", "--data", help="Data folder path. For example, -d /home/ali/data/", required=True)
+    with open("config.yml") as ymlfile:
+        config = yaml.load(ymlfile)
 
-    args = vars(parser.parse_args())
-    data_dirs = []
-    if not args["mysql_host"] or  not args["mysql_username"] or  not args["mysql_password"] or  not args["mysql_database"]:
-        raise ValueError("Missing MySQL host, ip, port, and/or password.")
-    elif not args["data"]:
-        raise ValueError("Missing data directory path.")
-
-
-    data_path = args["data"]
-    if (data_path[-1] != '/'):
-        data_path += '/'
-
-    #for dir in data_dirs:
-    ReplayCerebralCortexData(mysql_host=args["mysql_host"], mysql_database=args["mysql_database"], mysql_username=args["mysql_username"], mysql_password=args["mysql_password"], data_dir=data_path)
+    ReplayCerebralCortexData(config)

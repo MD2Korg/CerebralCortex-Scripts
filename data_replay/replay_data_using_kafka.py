@@ -22,29 +22,58 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import glob
 import os
 import json
-import argparse
-
+import yaml
+from data_replay.db_helper_methods import SqlData
 from kafka import KafkaProducer
 
-BLACK_LIST = []
 
 class ReplayCerebralCortexData:
-    def __init__(self, kafka_broker, data_dir):
+    def __init__(self, config):
         """
         Constructor
         :param configuration:
         """
-        self.kafka_broker = kafka_broker
-        self.data_dir = data_dir
+        self.sqlData = SqlData()
+        self.config = config
+        self.blacklist_regex = self.config["blacklist"]["blre1"]
+        self.replay_type = self.config["data_replay"]["replay_type"]
+        self.kafka_broker = self.config["kafkaserver"]["host"]
+        self.data_dir = self.config["data_replay"]["data_dir"]
+        if (self.data_dir[-1] != '/'):
+            self.data_dir += '/'
+
+        if str(config["users"]["uuids"]).strip()!="":
+            participant_ids = str(config["users"]["uuids"]).split(",")
+
+        if self.replay_type=="filez":
+            pass
+        elif self.replay_type=="mydb":
+            self.read_data_dir(participant_ids)
+        else:
+            raise ValueError("Replay type can only be filez or mydb")
+
         self.producer = KafkaProducer(bootstrap_servers=self.kafka_broker, api_version=(0, 10),
                                  value_serializer=lambda v: json.dumps(v).encode('utf-8'))
-        self.read_data_dir()
 
-    def read_data_dir(self):
-        for day_dir in os.scandir(self.data_dir):
+    def db_data(self, participant_ids):
+        results = self.sqlData.get_data(participant_ids, self.blacklist_regex)
+        if len(results)>0:
+            for row in results:
+                self.produce_kafka_message({"user_id": row["owner_id"], "day": row["day"], "stream_id": row["stream_id"], "files_list": row["files_list"]})
+        else:
+            print("No record. You may need to run store_dirs_to_db.py if you want to use mydb data replay type.")
+
+    def read_data_dir(self, participant_ids):
+        data_dir = []
+        if len(participant_ids)>0:
+            for participant_id in participant_ids:
+                data_dir.append(self.data_dir+participant_id.strip())
+        else:
+            data_dir = self.data_dir
+
+        for day_dir in os.scandir(data_dir):
             if day_dir.is_dir():
                 for stream_dir in os.scandir(day_dir):
                     if stream_dir.is_dir():
@@ -53,7 +82,6 @@ class ReplayCerebralCortexData:
                         user_id  = tmp[0]
                         day = tmp[1]
                         stream_id = tmp[2]
-                        #files_list = list(filter(os.path.isfile, glob.glob(stream_dir+ "/*.gz")))
                         files_list = []
                         for f in os.listdir(stream_dir):
                             if f.endswith(".gz"):
@@ -89,30 +117,7 @@ class ReplayCerebralCortexData:
 
 
 if __name__ == "__main__":
-    # python3 replay_data_using_kafka.py 127.0.0.1:9092 data-folder-path start-time(opt) end-time(opt)
+    with open("config.yml") as ymlfile:
+        config = yaml.load(ymlfile)
 
-    parser = argparse.ArgumentParser(description='Replay all or part of cerebralcortex data.')
-    parser.add_argument("-b", "--broker", help="Kafka Broker IP and port", required=True)
-    parser.add_argument("-d", "--data", help="Data folder path. For example, -d /home/ali/data/", required=True)
-    parser.add_argument("-uid", "--user_id", help="User/Participant ID, For example, -uid UUID1,UUID2,UUID3", required=False)
-
-    args = vars(parser.parse_args())
-    data_dirs = []
-    if not args["broker"]:
-        raise ValueError("Missing Kafka broker URL/IP and Port.")
-    elif not args["data"]:
-        raise ValueError("Missing data directory path.")
-
-    data_path = args["data"]
-    if (data_path[-1] != '/'):
-        data_path += '/'
-
-    if args["user_id"]:
-        participant_ids = args["user_id"].split(",")
-        for participant_id in participant_ids:
-            data_dirs.append(data_path+participant_id.strip())
-    else:
-        data_dirs = [entry.path for entry in os.scandir(data_path) if entry.is_dir()]
-
-    for dir in data_dirs:
-        ReplayCerebralCortexData(kafka_broker=args["broker"], data_dir=dir)
+    ReplayCerebralCortexData(config=config)

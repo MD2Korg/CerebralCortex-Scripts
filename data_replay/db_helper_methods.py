@@ -127,9 +127,9 @@ class SqlData():
 
         if len(participant_ids)>0:
             for participant_id in participant_ids:
-                fields += '%s="%s" and ' % ("owner_id", participant_id)
-
-            qry = "select * from data_replay where " + fields +" "+fields2+" "+fields3+" processed=0"
+                fields += '%s="%s" or ' % ("owner_id", participant_id)
+            fields = fields.rstrip(" or")
+            qry = "select * from data_replay where (" + fields +") and "+fields2+" "+fields3+" processed=0"
         else:
             qry = "select * from data_replay where " + fields2 + " "+fields3+" processed=0 and dir_size<1000000"
 

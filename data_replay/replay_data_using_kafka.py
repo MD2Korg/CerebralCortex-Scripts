@@ -37,7 +37,7 @@ class ReplayCerebralCortexData:
         """
         self.sqlData = SqlData()
         self.config = config
-        self.blacklist_regex = self.config["blacklist"]["blre1"]
+        self.blacklist_regex = self.config["blacklist"]
         self.replay_type = self.config["data_replay"]["replay_type"]
         self.kafka_broker = self.config["kafkaserver"]["host"]
         self.data_dir = self.config["data_replay"]["data_dir"]
@@ -111,7 +111,7 @@ class ReplayCerebralCortexData:
         files_list = ','.join(filename["files_list"])
         files_list = files_list.replace(base_dir_path, "")
 
-        self.producer.send("nosql_filequeue", {"metadata": metadata, "filename": files_list})
+        self.producer.send("nosql_filequeue", {"metadata": metadata, "day":day, "filename": files_list})
 
         print("Yielding file:", filename["files_list"][0])
 

@@ -114,14 +114,23 @@ class SqlData():
         vals = str(owner_id), str(stream_id), str(stream_name), str(day), json.dumps(files_list), dir_size, json.dumps(metadata)
         self.execute(qry, vals, commit=True)
 
-    def get_data(self, participant_ids, bl_regex):
-        fields = None
+    def get_data(self, participant_ids, blacklist_regex):
+        fields = ""
+        fields2 = ""
+        fields3 = ""
+
+        for breg in blacklist_regex["regzex"]:
+            fields2 += '%s NOT REGEXP "%s" and ' % ("stream_name", blacklist_regex["regzex"][breg])
+
+        for breg in blacklist_regex["txt_match"]:
+            fields3 += '%s not like "%s" and ' % ("stream_name", blacklist_regex["txt_match"][breg])
+
         if len(participant_ids)>0:
             for participant_id in participant_ids:
                 fields += '%s=%s and ' % ("owner_id", participant_id)
 
-            qry = "select * from data_replay where "+fields+" processed=0 and stream_name NOT REGEXP "+bl_regex
+            qry = "select * from data_replay where " + fields +" "+fields2+" "+fields3+" processed=0"
         else:
-            qry = "select * from data_replay where stream_name NOT REGEXP '"+bl_regex+"' and processed=0 order by id limit 20"
+            qry = "select * from data_replay where " + fields2 + " "+fields3+" processed=0 and dir_size<1000000"
 
         return self.execute(qry)

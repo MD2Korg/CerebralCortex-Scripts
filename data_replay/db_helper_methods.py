@@ -127,7 +127,7 @@ class SqlData():
 
         if len(participant_ids)>0:
             for participant_id in participant_ids:
-                fields += '%s=%s and ' % ("owner_id", participant_id)
+                fields += '%s="%s" and ' % ("owner_id", participant_id)
 
             qry = "select * from data_replay where " + fields +" "+fields2+" "+fields3+" processed=0"
         else:

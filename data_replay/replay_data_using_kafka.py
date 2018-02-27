@@ -66,6 +66,7 @@ class ReplayCerebralCortexData:
                 for f in json.loads(row["files_list"]):
                     files_list.append(self.data_dir+f)
                 self.produce_kafka_message({"user_id": row["owner_id"], "day": row["day"], "stream_id": row["stream_id"], "files_list": files_list})
+            self.producer.flush()
         else:
             print("No record. You may need to run store_dirs_to_db.py if you want to use mydb data replay type.")
 
@@ -114,8 +115,6 @@ class ReplayCerebralCortexData:
         self.producer.send("nosql_filequeue", {"metadata": metadata, "day":day, "filename": files_list})
 
         print("Yielding file:", filename["files_list"][0])
-
-        self.producer.flush()
 
 if __name__ == "__main__":
     with open("config.yml") as ymlfile:

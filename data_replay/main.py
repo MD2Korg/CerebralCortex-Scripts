@@ -36,8 +36,8 @@ class ReplayCerebralCortexData:
         Constructor
         :param configuration:
         """
-        self.sqlData = SqlData()
         self.config = config
+        self.sqlData = SqlData(config)
         self.blacklist_regex = self.config["blacklist"]
         self.replay_type = self.config["data_replay"]["replay_type"]
         self.kafka_broker = self.config["kafkaserver"]["host"]
@@ -126,4 +126,4 @@ if __name__ == "__main__":
     with open(args["conf"]) as ymlfile:
         config = yaml.load(ymlfile)
 
-    ReplayCerebralCortexData(config=config)
+    ReplayCerebralCortexData(config)

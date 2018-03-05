@@ -29,10 +29,10 @@ import json
 import yaml
 
 class SqlData():
-    def __init__(self):
+    def __init__(self, config):
 
-        with open("config.yml") as ymlfile:
-            self.config = yaml.load(ymlfile)
+
+        self.config = config
 
         self.hostIP = self.config['mysql']['host']
         self.hostPort = self.config['mysql']['port']

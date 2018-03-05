@@ -26,6 +26,7 @@
 import os
 import json
 import yaml
+import argparse
 from data_replay.db_helper_methods import SqlData
 
 class ReplayCerebralCortexData:
@@ -70,7 +71,13 @@ class ReplayCerebralCortexData:
 
 if __name__ == "__main__":
 
-    with open("config.yml") as ymlfile:
+    parser = argparse.ArgumentParser(description='CerebralCortex Data Replay')
+    parser.add_argument('-conf','--conf', help='CerebralCortex configuration file', required=True)
+
+    args = vars(parser.parse_args())
+
+    with open(args["conf"]) as ymlfile:
         config = yaml.load(ymlfile)
+
 
     ReplayCerebralCortexData(config)

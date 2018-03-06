@@ -28,6 +28,7 @@ import mysql.connector.pooling
 import json
 import yaml
 
+
 class SqlData():
     def __init__(self, config):
 

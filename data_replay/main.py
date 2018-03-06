@@ -26,7 +26,7 @@ import os
 import json
 import yaml
 import argparse
-from data_replay.db_helper_methods import SqlData
+from db_helper_methods import SqlData
 from kafka import KafkaProducer
 
 

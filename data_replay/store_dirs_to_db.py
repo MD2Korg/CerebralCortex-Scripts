@@ -27,7 +27,7 @@ import os
 import json
 import yaml
 import argparse
-from data_replay.db_helper_methods import SqlData
+from db_helper_methods import SqlData
 
 class ReplayCerebralCortexData:
     def __init__(self, config):
@@ -40,7 +40,7 @@ class ReplayCerebralCortexData:
         if (self.data_dir[-1] != '/'):
             self.data_dir += '/'
 
-        self.sqlData = SqlData()
+        self.sqlData = SqlData(config)
         self.read_data_dir()
 
     def read_data_dir(self):

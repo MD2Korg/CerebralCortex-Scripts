@@ -47,7 +47,7 @@ class fixMySQLTime:
             stream_ids = self.hdfs.ls(pid)
             for sid in stream_ids:
                 days = self.get_days(self.hdfs.ls(sid))
-                days = days.sort()
+                days.sort()
                 start_day = days[0]
                 end_day = days[len(days)-1]
                 base_path = sid.replace(dir_path, "")

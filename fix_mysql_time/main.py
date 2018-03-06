@@ -25,7 +25,7 @@
 import pickle
 import yaml
 import argparse
-from db_helper_methods import SqlData
+from data_replay.db_helper_methods import SqlData
 import pyarrow
 
 
@@ -52,10 +52,11 @@ class fixMySQLTime:
                 base_path = sid.replace(dir_path, "")
                 stream_id = base_path[-36:]
                 owner_id = base_path[:36]
+                print("Processing (owner-id, stream-id, start-day, end-day) ", owner_id, stream_id, start_day, end_day)
                 start_time = self.get_datetime(sid, start_day, "start")
                 end_time = self.get_datetime(sid, end_day, "end")
                 self.sqlData.update_start_end_time(stream_id, start_time, end_time)
-                print("Processed (owner-id, stream-id, start-day, end-day) ", owner_id, stream_id, start_day, end_day)
+
 
     def get_days(self, days_files):
         days  = []

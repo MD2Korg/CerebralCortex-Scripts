@@ -47,16 +47,17 @@ class fixMySQLTime:
             stream_ids = self.hdfs.ls(pid)
             for sid in stream_ids:
                 days = self.get_days(self.hdfs.ls(sid, detail=True))
-                days.sort()
-                start_day = min(days)
-                end_day = max(days)
-                base_path = sid.replace(dir_path, "")
-                stream_id = base_path[-36:]
-                owner_id = base_path[:36]
-                print("Processing (owner-id, stream-id, start-day, end-day) ", owner_id, stream_id, start_day, end_day)
-                start_time = self.get_datetime(sid, start_day, days, "start")
-                end_time = self.get_datetime(sid, end_day, days, "end")
-                self.sqlData.update_start_end_time(stream_id, start_time, end_time)
+                if len(days)>0:
+                    days.sort()
+                    start_day = min(days)
+                    end_day = max(days)
+                    base_path = sid.replace(dir_path, "")
+                    stream_id = base_path[-36:]
+                    owner_id = base_path[:36]
+                    print("Processing (owner-id, stream-id, start-day, end-day) ", owner_id, stream_id, start_day, end_day)
+                    start_time = self.get_datetime(sid, start_day, days, "start")
+                    end_time = self.get_datetime(sid, end_day, days, "end")
+                    self.sqlData.update_start_end_time(stream_id, start_time, end_time)
 
 
     def get_days(self, days_files):

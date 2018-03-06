@@ -25,7 +25,7 @@
 import pickle
 import yaml
 import argparse
-from data_replay.db_helper_methods import SqlData
+from db_helper_methods import SqlData
 import pyarrow
 
 

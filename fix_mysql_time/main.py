@@ -78,7 +78,7 @@ class fixMySQLTime:
             raise ValueError("Day type is unknown.")
 
 if __name__ == "__main__":
-    # export CC path before running this
+    # export CC path before running this (export PYTHONPATH="${PYTHONPATH}:/home/ali/IdeaProjects/CerebralCortex/")
     parser = argparse.ArgumentParser(description='CerebralCortex Data Replay')
     parser.add_argument('-conf','--conf', help='CerebralCortex configuration file', required=True)
 

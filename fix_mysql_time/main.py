@@ -63,6 +63,7 @@ class fixMySQLTime:
         days  = []
         for day in days_files:
             if day["size"]>0:
+                print(day["name"])
                 days.append(int(day["name"][-15:][:8]))
         return days
 

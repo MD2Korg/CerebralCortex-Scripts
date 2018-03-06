@@ -46,10 +46,10 @@ class fixMySQLTime:
         for pid in participant_ids:
             stream_ids = self.hdfs.ls(pid)
             for sid in stream_ids:
-                days = self.get_days(self.hdfs.ls(sid))
+                days = self.get_days(self.hdfs.ls(sid, detail=True))
                 days.sort()
-                start_day = days[0]
-                end_day = days[len(days)-1]
+                start_day = min(days)
+                end_day = max(days)
                 base_path = sid.replace(dir_path, "")
                 stream_id = base_path[-36:]
                 owner_id = base_path[:36]
@@ -62,7 +62,8 @@ class fixMySQLTime:
     def get_days(self, days_files):
         days  = []
         for day in days_files:
-            days.append(int(day[-15:][:8]))
+            if day["size"]>0:
+                days.append(int(day["name"][-15:][:8]))
         return days
 
     def get_datetime(self, filepath, day, days, day_type):
@@ -71,8 +72,9 @@ class fixMySQLTime:
             filepath = filepath+"/"
         with self.hdfs.open(filepath+str(day)+".pickle", "rb") as f:
             data = f.read()
-            if data is not None and data!="":
+            if data is not None and data!=b'':
                 data = pickle.loads(data)
+
         #TODO: sort list
         # data = sorted(data)
         if len(data)>0:

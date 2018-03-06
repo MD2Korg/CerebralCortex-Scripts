@@ -47,36 +47,41 @@ class fixMySQLTime:
             stream_ids = self.hdfs.ls(pid)
             for sid in stream_ids:
                 days = self.get_days(self.hdfs.ls(sid))
-                start_day = min(days)
-                end_day = max(days)
+                days = days.sort()
+                start_day = days[0]
+                end_day = days[len(days)-1]
                 base_path = sid.replace(dir_path, "")
                 stream_id = base_path[-36:]
                 owner_id = base_path[:36]
                 print("Processing (owner-id, stream-id, start-day, end-day) ", owner_id, stream_id, start_day, end_day)
-                start_time = self.get_datetime(sid, start_day, "start")
-                end_time = self.get_datetime(sid, end_day, "end")
+                start_time = self.get_datetime(sid, start_day, days, "start")
+                end_time = self.get_datetime(sid, end_day, days, "end")
                 self.sqlData.update_start_end_time(stream_id, start_time, end_time)
 
 
     def get_days(self, days_files):
         days  = []
         for day in days_files:
-            days.append(day[-15:][:8])
+            days.append(int(day[-15:][:8]))
         return days
 
-    def get_datetime(self, filepath, day, day_type):
+    def get_datetime(self, filepath, day, days, day_type):
+        data = None
         if filepath[-1:]!="/":
             filepath = filepath+"/"
-        with self.hdfs.open(filepath+day+".pickle", "rb") as f:
-            data = pickle.loads(f.read())
+        with self.hdfs.open(filepath+str(day)+".pickle", "rb") as f:
+            data = f.read()
+            if data is not None and data!="":
+                data = pickle.loads(data)
         #TODO: sort list
         # data = sorted(data)
-        if day_type=="start":
-            return data[0].start_time
-        elif day_type=="end":
-            return data[len(data)-1].start_time
-        else:
-            raise ValueError("Day type is unknown.")
+        if len(data)>0:
+            if day_type=="start":
+                return data[0].start_time
+            elif day_type=="end":
+                return data[len(data)-1].start_time
+            else:
+                raise ValueError("Day type is unknown.")
 
 if __name__ == "__main__":
     # export CC path before running this (export PYTHONPATH="${PYTHONPATH}:/home/ali/IdeaProjects/CerebralCortex/")

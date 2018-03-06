@@ -138,7 +138,7 @@ class SqlData():
 
         return self.execute(qry)
 
-    def update_start_end_time(self, stream_id: uuid, start_time: datetime, end_time:datetime):
+    def update_start_end_time(self, stream_id: uuid, start_time: datetime=None, end_time:datetime=None):
         """
         update start time only if the new-start-time is older than the existing start-time
         :param stream_id:
@@ -150,6 +150,13 @@ class SqlData():
         start_time = localtz.localize(start_time)
         end_time = localtz.localize(end_time)
 
-        qry = "UPDATE " + self.datastreamTable + " set start_time=%s , end_time=%s where identifier=%s"
-        vals = start_time, end_time, str(stream_id)
+        if start_time is not None and start_time!="" and end_time is not None and end_time!="":
+            qry = "UPDATE " + self.datastreamTable + " set start_time=%s , end_time=%s where identifier=%s"
+            vals = start_time, end_time, str(stream_id)
+        if (start_time is not None and start_time!="") and (end_time is None or end_time==""):
+            qry = "UPDATE " + self.datastreamTable + " set start_time=%s where identifier=%s"
+            vals = start_time, str(stream_id)
+        if (start_time is None or start_time=="") and (end_time is not None and end_time!=""):
+            qry = "UPDATE " + self.datastreamTable + " set end_time=%s where identifier=%s"
+            vals = start_time, end_time, str(stream_id)
         self.execute(qry, vals, commit=True)

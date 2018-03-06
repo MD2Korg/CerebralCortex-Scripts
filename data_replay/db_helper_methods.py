@@ -26,7 +26,9 @@
 import mysql.connector
 import mysql.connector.pooling
 import json
-import yaml
+import uuid
+from datetime import datetime
+from pytz import timezone
 
 
 class SqlData():
@@ -135,3 +137,19 @@ class SqlData():
             qry = "select * from data_replay where " + fields2 + " "+fields3+" processed=0 and dir_size<1000000"
 
         return self.execute(qry)
+
+    def update_start_end_time(self, stream_id: uuid, start_time: datetime, end_time:datetime):
+        """
+        update start time only if the new-start-time is older than the existing start-time
+        :param stream_id:
+        :param new_start_time:
+        :return:
+        """
+        localtz = timezone("UTC")
+
+        start_time = localtz.localize(start_time)
+        end_time = localtz.localize(end_time)
+
+        qry = "UPDATE " + self.datastreamTable + " set start_time=%s , end_time=%s where identifier=%s"
+        vals = start_time, end_time, str(stream_id)
+        self.execute(qry, vals, commit=True)

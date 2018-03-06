@@ -63,8 +63,10 @@ class fixMySQLTime:
         days  = []
         for day in days_files:
             if day["size"]>0:
-                print(day["name"])
-                days.append(int(day["name"][-15:][:8]))
+                try:
+                    days.append(int(day["name"][-15:][:8]))
+                except:
+                    pass
         return days
 
     def get_datetime(self, filepath, day, days, day_type):

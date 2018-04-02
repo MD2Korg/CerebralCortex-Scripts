@@ -13,6 +13,8 @@ def compress_hdfs_data(CC, start, end):
     all_users = []
     hdfs = pyarrow.hdfs.connect(CC.config["hdfs"]["host"], CC.config["hdfs"]["port"])
     all_users = hdfs.ls(CC.config["hdfs"]["raw_files_dir"])
+    start = int(start)
+    end = int(end)
     users = all_users[start:end]
     print("Total participants to process: ", len(users))
     for user in all_users:

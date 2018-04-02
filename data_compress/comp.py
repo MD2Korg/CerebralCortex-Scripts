@@ -38,4 +38,5 @@ if __name__ == "__main__":
     args = vars(parser.parse_args())
 
     if args["conf"] is not None and args["conf"] != "":
-        CC = CerebralCortex(args["conf"], args["start"], args["end"])
+        CC = CerebralCortex(args["conf"])
+        compress_hdfs_data(CC, args["start"], args["end"])

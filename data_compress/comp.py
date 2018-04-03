@@ -17,7 +17,7 @@ def compress_hdfs_data(CC, start, end):
     end = int(end)
     users = all_users[start:end]
     print("Total participants to process: ", len(users))
-    for user in all_users:
+    for user in users:
         print("Processing, participant ID: ", user)
         streams = hdfs.ls(user)
         for stream in streams:

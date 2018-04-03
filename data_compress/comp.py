@@ -1,14 +1,36 @@
+# Copyright (c) 2018, MD2K Center of Excellence
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# * Redistributions of source code must retain the above copyright notice, this
+# list of conditions and the following disclaimer.
+#
+# * Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation
+# and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 import pyarrow
 import argparse
 import pickle
 import gzip
 import traceback
-from cerebralcortex.core.datatypes.datapoint import DataPoint
-from cerebralcortex.core.datatypes.datastream import DataStream
-from cerebralcortex.cerebralcortex import CerebralCortex
+import yaml
 
 
-def compress_hdfs_data(start, end):
+def compress_hdfs_data(config, start, end):
     """
 
     :param CC: CerebralCortex object
@@ -16,8 +38,8 @@ def compress_hdfs_data(start, end):
     :param end: ending index of list
     """
     all_users = []
-    hdfs = pyarrow.hdfs.connect(CC.config["hdfs"]["host"], CC.config["hdfs"]["port"])
-    all_users = hdfs.ls(CC.config["hdfs"]["raw_files_dir"])
+    hdfs = pyarrow.hdfs.connect(config["hdfs"]["host"], config["hdfs"]["port"])
+    all_users = hdfs.ls(config["hdfs"]["raw_files_dir"])
     start = int(start)
     end = int(end)
     users = all_users[start:end]
@@ -29,13 +51,8 @@ def compress_hdfs_data(start, end):
             day_files = hdfs.ls(stream)
             for day_file in day_files:
                 if day_file[-3:] != ".gz":
-                    tmp = day_file.split("/")
-                    # owner_id = tmp[3]
-                    # stream_id = tmp[4]
-                    # day = tmp[5].replace(".pickle", "")
                     print(day_file)
                     process_file(hdfs, day_file)
-                    exit(1)
 
 def process_file(hdfs, filename):
     data = None
@@ -101,6 +118,6 @@ if __name__ == "__main__":
 
     args = vars(parser.parse_args())
 
-    # if args["conf"] is not None and args["conf"] != "":
-    #     CC = CerebralCortex(args["conf"])
-    compress_hdfs_data(args["start"], args["end"])
+    with open(args["conf"]) as ymlfile:
+        config = yaml.load(ymlfile)
+    compress_hdfs_data(config, args["start"], args["end"])

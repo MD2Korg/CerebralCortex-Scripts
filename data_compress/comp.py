@@ -30,7 +30,7 @@ import traceback
 import yaml
 
 
-def compress_hdfs_data(config, start, end):
+def compress_hdfs_data(config, start, end, participants):
     """
 
     :param CC: CerebralCortex object
@@ -39,11 +39,19 @@ def compress_hdfs_data(config, start, end):
     """
     all_users = []
     hdfs = pyarrow.hdfs.connect(config["hdfs"]["host"], config["hdfs"]["port"])
-    all_users = hdfs.ls(config["hdfs"]["raw_files_dir"])
-    start = int(start)
-    end = int(end)
-    users = all_users[start:end]
+
+
+
+    if len(participants)>0:
+        users = participants
+    else:
+        start = int(start)
+        end = int(end)
+        all_users = hdfs.ls(config["hdfs"]["raw_files_dir"])
+        users = all_users[start:end]
+
     print("Total participants to process: ", len(users))
+
     for user in users:
         print("Processing, participant ID: ", user)
         streams = hdfs.ls(user)
@@ -113,11 +121,17 @@ def compress_store_pickle(filename: str, data: pickle, hdfs: object=None):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='CerebralCortex Data Compress Script')
     parser.add_argument('-conf', '--conf', help='CerebralCortex configuration file', required=True)
-    parser.add_argument('-start', '--start', help='Starting index of list. From which index process shal being.', required=True)
-    parser.add_argument('-end', '--end', help='Ending index of list. At what index processing shall end.', required=True)
+    parser.add_argument('-start', '--start', help='Starting index of list. From which index process shal being.', required=False)
+    parser.add_argument('-end', '--end', help='Ending index of list. At what index processing shall end.', required=False)
+    parser.add_argument('-participants', '--participants', help='Participants UUIDs (comma separated ids).', required=False)
 
+    participants = []
     args = vars(parser.parse_args())
 
     with open(args["conf"]) as ymlfile:
         config = yaml.load(ymlfile)
-    compress_hdfs_data(config, args["start"], args["end"])
+
+    if args["participants"] and args["participants"]!="":
+        participants = str(args["participants"]).split(",")
+
+    compress_hdfs_data(config, args["start"], args["end"], participants)

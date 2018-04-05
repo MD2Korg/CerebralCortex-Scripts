@@ -125,13 +125,17 @@ if __name__ == "__main__":
     parser.add_argument('-end', '--end', help='Ending index of list. At what index processing shall end.', required=False)
     parser.add_argument('-participants', '--participants', help='Participants UUIDs (comma separated ids).', required=False)
 
-    participants = []
+    participant_ids = []
+    participants_data_path = []
     args = vars(parser.parse_args())
 
     with open(args["conf"]) as ymlfile:
         config = yaml.load(ymlfile)
 
     if args["participants"] and args["participants"]!="":
-        participants = str(args["participants"]).split(",")
+        participant_ids = str(args["participants"]).split(",")
 
-    compress_hdfs_data(config, args["start"], args["end"], participants)
+    for participant in participant_ids:
+        participants_data_path.append("/cerebralcortex/data/" + str(participant))
+
+    compress_hdfs_data(config, args["start"], args["end"], participants_data_path)

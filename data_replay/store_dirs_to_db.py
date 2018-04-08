@@ -30,7 +30,7 @@ import argparse
 from db_helper_methods import SqlData
 
 class ReplayCerebralCortexData:
-    def __init__(self, config):
+    def __init__(self, users, config):
         """
         Constructor
         :param configuration:
@@ -41,6 +41,7 @@ class ReplayCerebralCortexData:
             self.data_dir += '/'
 
         self.sqlData = SqlData(config)
+        self.users = users
         self.lab_participants = ['04585052-431f-46cf-bfbc-94bf42c380c8',
                             '04a32e7a-df20-4ed9-a862-553b101dbd95',
                             '04d881cf-7fa7-441b-a6de-e5be72770ca0',
@@ -119,7 +120,7 @@ class ReplayCerebralCortexData:
         for stream_dir in os.scandir(self.data_dir):
             if stream_dir.is_dir():
                 owner = stream_dir.path[-36:]
-                if owner in self.lab_participants:
+                if self.users!="all" and owner in self.lab_participants:
                     for day_dir in os.scandir(stream_dir.path):
                         if day_dir.is_dir():
                             for stream_dir in os.scandir(day_dir):
@@ -146,6 +147,7 @@ class ReplayCerebralCortexData:
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='CerebralCortex Data Replay')
+    parser.add_argument('-users','--users', help='Scan all users directories or only for the list provided in the script.', type=str, default="all", required=False)
     parser.add_argument('-conf','--conf', help='CerebralCortex configuration file', required=True)
 
     args = vars(parser.parse_args())
@@ -154,4 +156,4 @@ if __name__ == "__main__":
         config = yaml.load(ymlfile)
 
 
-    ReplayCerebralCortexData(config)
+    ReplayCerebralCortexData(args["users"],config)

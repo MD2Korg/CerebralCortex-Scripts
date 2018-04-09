@@ -120,29 +120,34 @@ class ReplayCerebralCortexData:
         for stream_dir in os.scandir(self.data_dir):
             if stream_dir.is_dir():
                 owner = stream_dir.path[-36:]
-                if self.users!="all" and owner in self.lab_participants:
-                    for day_dir in os.scandir(stream_dir.path):
-                        if day_dir.is_dir():
-                            for stream_dir in os.scandir(day_dir):
-                                if stream_dir.is_dir():
-                                    stream_dir = stream_dir.path
-                                    tmp = stream_dir.split("/")[-3:]
-                                    owner_id  = tmp[0]
-                                    day = tmp[1]
-                                    stream_id = tmp[2]
-                                    files_list = []
-                                    dir_size = 0
-                                    for f in os.listdir(stream_dir):
-                                        if f.endswith(".gz"):
-                                            new_filename = (stream_dir+"/"+f).replace(self.data_dir,"")
-                                            files_list.append(new_filename)
-                                            dir_size += os.path.getsize(stream_dir+"/"+f)
-                                    metadata_filename = self.data_dir+files_list[0].replace(".gz", ".json")
-                                    with open(metadata_filename, 'r') as mtd:
-                                        metadata = mtd.read()
-                                    metadata = json.loads(metadata)
-                                    stream_name = metadata["name"]
-                                    self.sqlData.add_to_db(owner_id, stream_id, stream_name, day, files_list, dir_size, metadata)
+                if self.users=="all":
+                    self.scan_stream_dir(stream_dir)
+                elif owner in self.lab_participants:
+                        self.scan_stream_dir(stream_dir)
+
+    def scan_stream_dir(self, stream_dir):
+        for day_dir in os.scandir(stream_dir.path):
+            if day_dir.is_dir():
+                for stream_dir in os.scandir(day_dir):
+                    if stream_dir.is_dir():
+                        stream_dir = stream_dir.path
+                        tmp = stream_dir.split("/")[-3:]
+                        owner_id  = tmp[0]
+                        day = tmp[1]
+                        stream_id = tmp[2]
+                        files_list = []
+                        dir_size = 0
+                        for f in os.listdir(stream_dir):
+                            if f.endswith(".gz"):
+                                new_filename = (stream_dir+"/"+f).replace(self.data_dir,"")
+                                files_list.append(new_filename)
+                                dir_size += os.path.getsize(stream_dir+"/"+f)
+                        metadata_filename = self.data_dir+files_list[0].replace(".gz", ".json")
+                        with open(metadata_filename, 'r') as mtd:
+                            metadata = mtd.read()
+                        metadata = json.loads(metadata)
+                        stream_name = metadata["name"]
+                        self.sqlData.add_to_db(owner_id, stream_id, stream_name, day, files_list, dir_size, metadata)
 
 if __name__ == "__main__":
 

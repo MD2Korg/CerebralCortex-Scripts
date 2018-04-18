@@ -71,7 +71,7 @@ class SqlData():
         }
 
         pool = mysql.connector.pooling.MySQLConnectionPool(
-            pool_name=pool_name,
+            pool_name="scripts",
             pool_size=pool_size,
             pool_reset_session=True,
             **dbconfig)
@@ -166,12 +166,12 @@ class SqlData():
 
     def get_weather_data_by_city_name(self, city_name, day):
         qry = "SELECT locations.city, locations.zip, locations.country, locations.country_code, weather.location, weather.sunrise, weather.sunset, weather.temperature, weather.humidity, weather.wind, weather.clouds, weather.snow, weather.detailed_status, weather.added_date FROM weather INNER JOIN locations on locations.id=weather.location where locations.city=%s and weather.added_date like %s"
-        vals = city_name, day
+        vals = city_name, day+"%s"
         return self.execute(qry, vals)
 
     def get_weather_data_by_city_id(self, id, day):
-        qry = "SELECT * FROM weather where id=%s and added_date like %s"
-        vals = id, day
+        qry = "SELECT sunrise,sunset,temperature,humidity,wind,clouds,snow,detailed_status as other, added_date as start_time FROM weather where location=%s and added_date like %s"
+        vals = id, day+"%"
         return self.execute(qry, vals)
 
     def get_all_users(self):

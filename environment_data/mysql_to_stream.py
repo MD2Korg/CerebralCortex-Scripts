@@ -6,6 +6,7 @@ from cerebralcortex.cerebralcortex import CerebralCortex
 from cerebralcortex.core.datatypes.datapoint import DataPoint
 from cerebralcortex.core.datatypes.datastream import DataStream
 import statistics
+from datetime import datetime
 import uuid
 import argparse
 from haversine import haversine
@@ -15,7 +16,7 @@ class SqlToCCStream():
 
         self.CC = CerebralCortex(config)
         self.config = self.CC.config
-        self.sqlData = SqlData(self.config)
+        self.sqlData = SqlData(self.config, dbName="environmental_data_collection")
         self.process()
 
     def process(self):
@@ -27,6 +28,20 @@ class SqlToCCStream():
         metadata = json.loads(metadata)
         for uid in user_ids:
             stream_ids = self.CC.get_stream_id(uid, 'LOCATION--org.md2k.phonesensor--PHONE')
+
+            # TEST CODE
+            # location_id = self.get_location_id((37.439168,-122.086283), all_locations)
+            # day = datetime.strptime("20171221", "%Y%m%d").strftime("%Y-%m-%d")
+            # weather_data = self.sqlData.get_weather_data_by_city_id(location_id, day)
+            # dps = []
+            # for wd in weather_data:
+            #     wd["temperature"] = json.loads(wd["temperature"])
+            #     wd["wind"] = json.loads(wd["wind"])
+            #     wd["snow"] = json.loads(wd["snow"])
+            #     wd["humidity"] = int(wd["humidity"])
+            #     wd["clouds"] = int(wd["clouds"])
+            #     dps.append(DataPoint(wd["start_time"], None, None, wd))
+
             for sid in stream_ids:
                 days = self.CC.get_stream_days(sid)
                 for day in days:
@@ -40,20 +55,30 @@ class SqlToCCStream():
                     # get weather data for match lat/long values
                     location_id = self.get_location_id(user_loc, all_locations)
 
-                    weather_data = self.sqlData.get_weather_data_by_city_id(location_id, day)
+                    if location_id is not None:
+                        formated_day = datetime.strptime(day, "%Y%m%d").strftime("%Y-%m-%d")
+                        weather_data = self.sqlData.get_weather_data_by_city_id(location_id, formated_day)
 
-                    # convert data into datastream
-                    execution_context = metadata["execution_context"]
-                    dp = DataPoint(weather_data["added_date"], None, offset, weather_data)
-                    # generate UUID for stream
-                    output_stream_id = str(metadata["data_descriptor"])+str(execution_context)+str(metadata["annotations"])
-                    output_stream_id += "weather-data-stream"
-                    output_stream_id += "weather-data-stream"
-                    output_stream_id = str(uuid.uuid3(uuid.NAMESPACE_DNS, output_stream_id))
-                    ds = DataStream(output_stream_id, uid, metadata["name"], metadata["data_descriptor"], execution_context, metadata["annotations"], weather_data["added_date"], None, dp)
+                        # convert data into datastream
+                        execution_context = metadata["execution_context"]
+                        dps = []
+                        for wd in weather_data:
+                            wd["temperature"] = json.loads(wd["temperature"])
+                            wd["wind"] = json.loads(wd["wind"])
+                            wd["snow"] = json.loads(wd["snow"])
+                            wd["humidity"] = int(wd["humidity"])
+                            wd["clouds"] = int(wd["clouds"])
 
-                    # store data stream
-                    self.CC.save_stream(ds)
+                            dps.append(DataPoint(wd["start_time"], None, offset, wd))
+                        # generate UUID for stream
+                        output_stream_id = str(metadata["data_descriptor"])+str(execution_context)+str(metadata["annotations"])
+                        output_stream_id += "weather-data-stream"
+                        output_stream_id += "weather-data-stream"
+                        output_stream_id = str(uuid.uuid3(uuid.NAMESPACE_DNS, output_stream_id))
+                        ds = DataStream(identifier=output_stream_id, owner=uid, name=metadata["name"], data_descriptor=metadata["data_descriptor"], execution_context=execution_context, annotations=metadata["annotations"], data=dps)
+
+                        # store data stream
+                        self.CC.save_stream(ds)
 
 
     def compute_lat_long_median(self, data):
@@ -69,7 +94,7 @@ class SqlToCCStream():
         closest = None
         location_id = None
         for loc in all_locations:
-            distance = haversine(user_loc,loc["latitude"],loc["longitude"])
+            distance = haversine(user_loc,(float(loc["latitude"]),float(loc["longitude"])),miles=True)
             if closest is None:
                 closest = distance
                 location_id = loc["id"]
@@ -84,11 +109,13 @@ class SqlToCCStream():
     def filter_user_ids(self):
 
         active_users = []
-        all_users = self.sqlData.get_all_users()
+        all_users = []
+        for uid in self.CC.get_all_users("mperf"):
+            all_users.append(uid["identifier"])
 
         data_dir = self.config["data_replay"]["data_dir"]
         for owner_dir in os.scandir(data_dir):
-            if owner_dir in all_users:
+            if owner_dir.name in all_users:
                 active_users.append(owner_dir)
 
         return active_users

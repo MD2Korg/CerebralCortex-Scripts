@@ -125,8 +125,8 @@ class ReplayCerebralCortexData:
                 elif owner in self.lab_participants:
                         self.scan_stream_dir(stream_dir)
 
-    def scan_stream_dir(self, stream_dir):
-        for day_dir in os.scandir(stream_dir.path):
+    def scan_stream_dir(self, stream_dir1):
+        for day_dir in os.scandir(stream_dir1.path):
             if day_dir.is_dir():
                 for stream_dir in os.scandir(day_dir):
                     if stream_dir.is_dir():

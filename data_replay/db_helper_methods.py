@@ -32,14 +32,17 @@ from pytz import timezone
 
 
 class SqlData():
-    def __init__(self, config):
+    def __init__(self, config, dbName=None):
 
 
         self.config = config
 
         self.hostIP = self.config['mysql']['host']
         self.hostPort = self.config['mysql']['port']
-        self.database = self.config['mysql']['database']
+        if dbName is None:
+            self.database = self.config['mysql']['database']
+        else:
+            self.database = dbName
         self.dbUser = self.config['mysql']['db_user']
         self.dbPassword = self.config['mysql']['db_pass']
         self.datastreamTable = self.config['mysql']['datastream_table']
@@ -160,3 +163,27 @@ class SqlData():
             qry = "UPDATE " + self.datastreamTable + " set end_time=%s where identifier=%s"
             vals = start_time, end_time, str(stream_id)
         self.execute(qry, vals, commit=True)
+
+    def get_weather_data_by_city_name(self, city_name, day):
+        qry = "SELECT locations.city, locations.zip, locations.country, locations.country_code, weather.location, weather.sunrise, weather.sunset, weather.temperature, weather.humidity, weather.wind, weather.clouds, weather.snow, weather.detailed_status, weather.added_date FROM weather INNER JOIN locations on locations.id=weather.location where locations.city=%s and weather.added_date like %s"
+        vals = city_name, day
+        return self.execute(qry, vals)
+
+    def get_weather_data_by_city_id(self, id, day):
+        qry = "SELECT * FROM weather where id=%s and added_date like %s"
+        vals = id, day
+        return self.execute(qry, vals)
+
+    def get_all_users(self):
+        all_users = []
+        qry = "select * from user where user_metadata->'$.study_name'='mperf'";
+        rows = self.execute(qry)
+        if len(rows)>0:
+            for row in rows:
+                all_users.append(row["identifier"])
+
+            return all_users
+
+    def get_latitude_llongitude(self):
+        qry = "select id, latitude,longitude from locations"
+        return self.execute(qry)

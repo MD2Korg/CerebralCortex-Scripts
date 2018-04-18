@@ -44,6 +44,7 @@ class SqlToCCStream():
             if len(stream_ids)>0:
                 print("Processing:", uid)
                 for sid in stream_ids:
+                    sid = sid["identifier"]
                     days = self.CC.get_stream_days(sid)
                     for day in days:
                         print("User ID, Stream ID, Day", uid, sid, day)

@@ -1,0 +1,40 @@
+{
+  "annotations":[],
+  "data_descriptor":[
+    {
+      "name": "",
+      "type":"",
+       "description": ""
+    }
+  ],
+  "execution_context":{
+    "processing_module":{
+      "name":"scripts.environment_data",
+      "input_streams":[
+        {
+          "id":"",
+          "name":""
+        }
+      ],
+      "input_parameters":{
+      }
+    },
+    "algorithm":{
+      "method":"scripts.environment_data.mysql_to_stream",
+      "authors":[
+        {
+          "name":"Nasir Ali",
+          "email":"nasir.ali08@gmail.com"
+        }
+      ],
+      "version":"0.0.1",
+      "reference":{
+      },
+      "description":""
+    }
+  },
+  "identifier":"",
+  "name":"org.md2k.scripts.environment_data.mysql_to_stream",
+  "owner":"",
+  "type":"1"
+}

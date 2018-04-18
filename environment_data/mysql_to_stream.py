@@ -26,8 +26,9 @@ class SqlToCCStream():
         with open("weather_data.json", "r") as wd:
             metadata = wd.read()
         metadata = json.loads(metadata)
+        input_stream_name = 'LOCATION--org.md2k.phonesensor--PHONE'
         for uid in user_ids:
-            stream_ids = self.CC.get_stream_id(uid, 'LOCATION--org.md2k.phonesensor--PHONE')
+            stream_ids = self.CC.get_stream_id(uid, input_stream_name)
 
             # TEST CODE
             # location_id = self.get_location_id((37.439168,-122.086283), all_locations)
@@ -60,6 +61,9 @@ class SqlToCCStream():
 
                         # convert data into datastream
                         execution_context = metadata["execution_context"]
+                        input_streams_metadata = {"id":sid, "name":input_stream_name}
+                        metadata["execution_context"]["processing_module"]["input_streams"] \
+                            = input_streams_metadata
                         dps = []
                         for wd in weather_data:
                             wd["temperature"] = json.loads(wd["temperature"])

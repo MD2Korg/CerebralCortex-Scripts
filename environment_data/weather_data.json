@@ -2,9 +2,39 @@
   "annotations":[],
   "data_descriptor":[
     {
-      "name": "",
-      "type":"",
-       "description": ""
+      "name": "sunrise",
+      "type":"datetime",
+       "description": "Time of sun rise."
+    },
+    {
+      "name": "sunset",
+      "type":"datetime",
+      "description": "Time of sunset."
+    },
+    {
+      "name": "temperature",
+      "type":"json",
+      "description": "It contains, min, max, and current temperature. Keys are: temp (current temperature), temp_min (minimum temperature), temp_max (maximum temperature)"
+    },
+    {
+      "name": "humidity",
+      "type":"int",
+      "description": "Percentage of humidity. Min is 0 and max is 100."
+    },
+    {
+      "name": "wind",
+      "type":"json",
+      "description": "Speed and degree of wind. Keys are: deg and speed."
+    },
+    {
+      "name": "clouds",
+      "type":"int",
+      "description": "Percentage of clouds."
+    },
+    {
+      "name": "other",
+      "type":"str",
+      "description": "Summary of the weather in text."
     }
   ],
   "execution_context":{
@@ -30,7 +60,7 @@
       "version":"0.0.1",
       "reference":{
       },
-      "description":""
+      "description":"This stream provides various weather statistics of a participant's location."
     }
   },
   "identifier":"",

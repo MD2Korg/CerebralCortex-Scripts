@@ -37,7 +37,6 @@ class SqlToCCStream():
             # for wd in weather_data:
             #     wd["temperature"] = json.loads(wd["temperature"])
             #     wd["wind"] = json.loads(wd["wind"])
-            #     wd["snow"] = json.loads(wd["snow"])
             #     wd["humidity"] = int(wd["humidity"])
             #     wd["clouds"] = int(wd["clouds"])
             #     dps.append(DataPoint(wd["start_time"], None, None, wd))
@@ -65,7 +64,6 @@ class SqlToCCStream():
                         for wd in weather_data:
                             wd["temperature"] = json.loads(wd["temperature"])
                             wd["wind"] = json.loads(wd["wind"])
-                            wd["snow"] = json.loads(wd["snow"])
                             wd["humidity"] = int(wd["humidity"])
                             wd["clouds"] = int(wd["clouds"])
 

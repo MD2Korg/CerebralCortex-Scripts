@@ -82,7 +82,7 @@ class SqlToCCStream():
                                     output_stream_id += "weather-data-stream"
                                     output_stream_id += "weather-data-stream"
                                     output_stream_id = str(uuid.uuid3(uuid.NAMESPACE_DNS, output_stream_id))
-                                    ds = DataStream(identifier=output_stream_id, owner=uid, name=metadata["name"], data_descriptor=metadata["data_descriptor"], execution_context=execution_context, annotations=metadata["annotations"], data=dps)
+                                    ds = DataStream(identifier=output_stream_id, owner=uid, name=metadata["name"], data_descriptor=metadata["data_descriptor"], execution_context=execution_context, annotations=metadata["annotations"], stream_type=metadata["type"], data=dps)
 
                                     print(ds)
                                     exit(1)

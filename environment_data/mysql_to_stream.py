@@ -50,7 +50,7 @@ class SqlToCCStream():
                         print("User ID, Stream ID, Day", uid, sid, day)
                         output_stream_id=""
                         # get gps data from stream-name 'LOCATION--org.md2k.phonesensor--PHONE'
-                        location_stream = self.CC.get_stream(sid, day)
+                        location_stream = self.CC.get_stream(stream_id=sid, day=day)
 
                         if len(location_stream.data)>0:
                             # compute median on lat. and long. vals
@@ -65,7 +65,7 @@ class SqlToCCStream():
 
                                 # convert data into datastream
                                 execution_context = metadata["execution_context"]
-                                input_streams_metadata = {"id":sid, "name":input_stream_name}
+                                input_streams_metadata = [{"id":sid, "name":input_stream_name}]
                                 metadata["execution_context"]["processing_module"]["input_streams"] \
                                     = input_streams_metadata
                                 dps = []
@@ -76,17 +76,18 @@ class SqlToCCStream():
                                     wd["clouds"] = int(wd["clouds"])
 
                                     dps.append(DataPoint(wd["start_time"], None, offset, wd))
-                                # generate UUID for stream
-                                output_stream_id = str(metadata["data_descriptor"])+str(execution_context)+str(metadata["annotations"])
-                                output_stream_id += "weather-data-stream"
-                                output_stream_id += "weather-data-stream"
-                                output_stream_id = str(uuid.uuid3(uuid.NAMESPACE_DNS, output_stream_id))
-                                ds = DataStream(identifier=output_stream_id, owner=uid, name=metadata["name"], data_descriptor=metadata["data_descriptor"], execution_context=execution_context, annotations=metadata["annotations"], data=dps)
+                                if len(dps)>0:
+                                    # generate UUID for stream
+                                    output_stream_id = str(metadata["data_descriptor"])+str(execution_context)+str(metadata["annotations"])
+                                    output_stream_id += "weather-data-stream"
+                                    output_stream_id += "weather-data-stream"
+                                    output_stream_id = str(uuid.uuid3(uuid.NAMESPACE_DNS, output_stream_id))
+                                    ds = DataStream(identifier=output_stream_id, owner=uid, name=metadata["name"], data_descriptor=metadata["data_descriptor"], execution_context=execution_context, annotations=metadata["annotations"], data=dps)
 
-                                print(ds)
-                                exit(1)
-                                # store data stream
-                                #self.CC.save_stream(ds)
+                                    print(ds)
+                                    exit(1)
+                                    # store data stream
+                                    # self.CC.save_stream(ds)
 
 
     def compute_lat_long_median(self, data):

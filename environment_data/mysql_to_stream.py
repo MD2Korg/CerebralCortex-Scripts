@@ -55,49 +55,53 @@ class SqlToCCStream():
                         if len(location_stream.data)>0:
                             # compute median on lat. and long. vals
                             user_loc = self.compute_lat_long_median(location_stream.data)
-                            offset = location_stream.data[0].offset
-                            # get weather data for match lat/long values
-                            location_id = self.get_location_id(user_loc, all_locations)
+                            if user_loc!=(0,0):
+                                offset = location_stream.data[0].offset
+                                # get weather data for match lat/long values
+                                location_id = self.get_location_id(user_loc, all_locations)
 
-                            if location_id is not None:
-                                formated_day = datetime.strptime(day, "%Y%m%d").strftime("%Y-%m-%d")
-                                weather_data = self.sqlData.get_weather_data_by_city_id(location_id, formated_day)
+                                if location_id is not None:
+                                    formated_day = datetime.strptime(day, "%Y%m%d").strftime("%Y-%m-%d")
+                                    weather_data = self.sqlData.get_weather_data_by_city_id(location_id, formated_day)
 
-                                # convert data into datastream
-                                execution_context = metadata["execution_context"]
-                                input_streams_metadata = [{"id":sid, "name":input_stream_name}]
-                                metadata["execution_context"]["processing_module"]["input_streams"] \
-                                    = input_streams_metadata
-                                dps = []
-                                for wd in weather_data:
-                                    wd["temperature"] = json.loads(wd["temperature"])
-                                    wd["wind"] = json.loads(wd["wind"])
-                                    wd["humidity"] = int(wd["humidity"])
-                                    wd["clouds"] = int(wd["clouds"])
+                                    # convert data into datastream
+                                    execution_context = metadata["execution_context"]
+                                    input_streams_metadata = [{"id":sid, "name":input_stream_name}]
+                                    metadata["execution_context"]["processing_module"]["input_streams"] \
+                                        = input_streams_metadata
+                                    dps = []
+                                    for wd in weather_data:
+                                        wd["temperature"] = json.loads(wd["temperature"])
+                                        wd["wind"] = json.loads(wd["wind"])
+                                        wd["humidity"] = int(wd["humidity"])
+                                        wd["clouds"] = int(wd["clouds"])
 
-                                    dps.append(DataPoint(wd["start_time"], None, offset, wd))
-                                if len(dps)>0:
-                                    # generate UUID for stream
-                                    output_stream_id = str(metadata["data_descriptor"])+str(execution_context)+str(metadata["annotations"])
-                                    output_stream_id += "weather-data-stream"
-                                    output_stream_id += "weather-data-stream"
-                                    output_stream_id += str(uid)
-                                    output_stream_id += str(sid)
-                                    # output_stream_id += str(day)
-                                    output_stream_id = str(uuid.uuid3(uuid.NAMESPACE_DNS, output_stream_id))
-                                    ds = DataStream(identifier=output_stream_id, owner=uid, name=metadata["name"], data_descriptor=metadata["data_descriptor"], execution_context=execution_context, annotations=metadata["annotations"], stream_type=metadata["type"], data=dps)
+                                        dps.append(DataPoint(wd["start_time"], None, offset, wd))
+                                    if len(dps)>0:
+                                        # generate UUID for stream
+                                        output_stream_id = str(metadata["data_descriptor"])+str(execution_context)+str(metadata["annotations"])
+                                        output_stream_id += "weather-data-stream"
+                                        output_stream_id += "weather-data-stream"
+                                        output_stream_id += str(uid)
+                                        output_stream_id += str(sid)
+                                        # output_stream_id += str(day)
+                                        output_stream_id = str(uuid.uuid3(uuid.NAMESPACE_DNS, output_stream_id))
+                                        ds = DataStream(identifier=output_stream_id, owner=uid, name=metadata["name"], data_descriptor=metadata["data_descriptor"], execution_context=execution_context, annotations=metadata["annotations"], stream_type=metadata["type"], data=dps)
 
-                                    # store data stream
-                                    self.CC.save_stream(ds)
+                                        # store data stream
+                                        self.CC.save_stream(ds)
 
 
     def compute_lat_long_median(self, data):
         latitude = []
         longitude = []
-        for dp in data:
-            latitude.append(dp.sample[0])
-            longitude.append(dp.sample[1])
-        return statistics.median(latitude),statistics.median(longitude)
+        if isinstance(data.sample, list) and len(data.sample) == 6:
+            for dp in data:
+                latitude.append(dp.sample[0])
+                longitude.append(dp.sample[1])
+            return statistics.median(latitude),statistics.median(longitude)
+        else:
+            return 0,0
 
     def get_location_id(self, user_loc, all_locations):
         # find distance between user location and weather lat/long

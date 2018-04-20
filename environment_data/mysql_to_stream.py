@@ -95,10 +95,13 @@ class SqlToCCStream():
     def compute_lat_long_median(self, data):
         latitude = []
         longitude = []
-        if isinstance(data.sample, list) and len(data.sample) == 6:
-            for dp in data:
+        valid_data=False
+        for dp in data:
+            if isinstance(dp.sample, list) and len(dp.sample) == 6:
                 latitude.append(dp.sample[0])
                 longitude.append(dp.sample[1])
+                valid_data=True
+        if valid_data:
             return statistics.median(latitude),statistics.median(longitude)
         else:
             return 0,0

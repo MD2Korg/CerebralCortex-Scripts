@@ -60,12 +60,15 @@ class VerifyStreamFormat():
 
         # get all the streams belong to a participant
         streams = self.CC.get_user_streams(user_id)
-        for stream_name, stream_info in streams.items():
-            if stream_info["stream_ids"] is not None and stream_info["stream_ids"] !="":
-                for stream_id in stream_info["stream_ids"]:
-                    days = self.CC.get_stream_days(stream_id)
-                    for day in days:
-                        self.read_file(stream_id, user_id, day)
+        with open("results.txt", "w") as output:
+            for stream_name, stream_info in streams.items():
+                if stream_info["stream_ids"] is not None and stream_info["stream_ids"] !="":
+                    for stream_id in stream_info["stream_ids"]:
+                        days = self.CC.get_stream_days(stream_id)
+                        for day in days:
+                            result = self.read_file(stream_id, user_id, day)
+                            output.write(result+"\n")
+                            print(result)
 
     def read_file(self, stream_id, user_id, day):
         data = None
@@ -86,9 +89,9 @@ class VerifyStreamFormat():
 
         if data is not None and len(data)>0:
             if data[0].offset is None or data[0].offset=="":
-                print(filename)
-        else:
-            print("Data is empty.")
+                return filename
+        # else:
+        #     return "Data is empty."
 
 
 

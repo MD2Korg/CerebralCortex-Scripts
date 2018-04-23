@@ -67,8 +67,9 @@ class VerifyStreamFormat():
                         days = self.CC.get_stream_days(stream_id)
                         for day in days:
                             result = self.read_file(stream_id, user_id, day)
-                            output.write(result+"\n")
-                            print(result)
+                            if result is not None:
+                                output.write(result+"\n")
+                                print(result)
 
     def read_file(self, stream_id, user_id, day):
         data = None

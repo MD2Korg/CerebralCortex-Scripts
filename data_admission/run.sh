@@ -1,0 +1,1 @@
+python3.6 -conf "/home/ali/IdeaProjects/CerebralCortex-DockerCompose/cc_config_file/cc_vagrant_configuration.yml" -study_name "mperf"

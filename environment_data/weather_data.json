@@ -80,7 +80,7 @@
     }
   },
   "identifier":"",
-  "name":"org.md2k.scripts.environment_data.mysql_to_stream",
+  "name":"org.md2k.scripts.environment_data.weather",
   "owner":"",
   "type":"1"
 }

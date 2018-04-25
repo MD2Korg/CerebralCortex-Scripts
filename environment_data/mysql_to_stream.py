@@ -132,7 +132,7 @@ class SqlToCCStream():
             elif distance<closest:
                 closest = distance
                 location_id = loc["id"]
-        if closest<=15: #if distance is below then 15 miles then select it as weather location
+        if closest<=30: #if distance is below then 30 miles then select it as weather location
             return location_id
         else:
             return None

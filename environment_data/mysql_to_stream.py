@@ -30,17 +30,30 @@ class SqlToCCStream():
         for uid in user_ids:
             stream_ids = self.CC.get_stream_id(uid, input_stream_name)
 
-            # TEST CODE
+            # START TEST CODE
             # location_id = self.get_location_id((37.439168,-122.086283), all_locations)
             # day = datetime.strptime("20171221", "%Y%m%d").strftime("%Y-%m-%d")
             # weather_data = self.sqlData.get_weather_data_by_city_id(location_id, day)
             # dps = []
+            #
             # for wd in weather_data:
+            #     dp_sample = []
             #     wd["temperature"] = json.loads(wd["temperature"])
             #     wd["wind"] = json.loads(wd["wind"])
-            #     wd["humidity"] = int(wd["humidity"])
-            #     wd["clouds"] = int(wd["clouds"])
-            #     dps.append(DataPoint(wd["start_time"], None, None, wd))
+            #
+            #     dp_sample["sunrise"] = wd["sunrise"]
+            #     dp_sample["sunset"] = wd["sunset"]
+            #     dp_sample["wind_deg"] = wd.get("wind").get("deg","")
+            #     dp_sample["wind_speed"] = wd.get("wind").get("speed","")
+            #     dp_sample["current_temp"] = wd["temperature"]["temp"]
+            #     dp_sample["max_temp"] = wd["temperature"]["temp_max"]
+            #     dp_sample["min_temp"] = wd["temperature"]["temp_min"]
+            #     dp_sample["humidity"] = int(wd["humidity"])
+            #     dp_sample["clouds"] = int(wd["clouds"])
+            #     dp_sample["other"] = wd["other"]
+            #     dp_sample = [wd["sunrise"],wd["sunset"],wd.get("wind").get("deg",""),wd.get("wind").get("speed",""),wd["temperature"]["temp"],wd["temperature"]["temp_max"],wd["temperature"]["temp_min"],int(wd["humidity"]),int(wd["clouds"]),wd["other"]]
+            #     dps.append(DataPoint(wd["start_time"], None, None, dp_sample))
+            # END TEST CODE
             if len(stream_ids)>0:
                 print("Processing:", uid)
                 for sid in stream_ids:
@@ -71,12 +84,13 @@ class SqlToCCStream():
                                         = input_streams_metadata
                                     dps = []
                                     for wd in weather_data:
+                                        dp_sample = []
                                         wd["temperature"] = json.loads(wd["temperature"])
                                         wd["wind"] = json.loads(wd["wind"])
-                                        wd["humidity"] = int(wd["humidity"])
-                                        wd["clouds"] = int(wd["clouds"])
 
-                                        dps.append(DataPoint(wd["start_time"], None, offset, wd))
+                                        dp_sample = [wd["sunrise"],wd["sunset"],wd.get("wind").get("deg",""),wd.get("wind").get("speed",""),wd["temperature"]["temp"],wd["temperature"]["temp_max"],wd["temperature"]["temp_min"],int(wd["humidity"]),int(wd["clouds"]),wd["other"]]
+
+                                        dps.append(DataPoint(wd["start_time"], None, offset, dp_sample))
                                     if len(dps)>0:
                                         # generate UUID for stream
                                         output_stream_id = str(metadata["data_descriptor"])+str(execution_context)+str(metadata["annotations"])

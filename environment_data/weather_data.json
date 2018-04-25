@@ -12,20 +12,36 @@
       "description": "Time of sunset."
     },
     {
-      "name": "temperature",
-      "type":"json",
-      "description": "It contains, min, max, and current temperature. Keys are: temp (current temperature), temp_min (minimum temperature), temp_max (maximum temperature)"
+      "name": "wind_deg",
+      "type":"int",
+      "description": "Degree of wind."
+    },
+    {
+      "name": "wind_speed",
+      "type":"float",
+      "description": "Speed of wind in miles."
+    },
+    {
+      "name": "current_temp",
+      "type":"float",
+      "description": "Current temperature at the moment."
+    },
+    {
+      "name": "max_temp",
+      "type":"float",
+      "description": "Max predicted temperature of the day."
+    },
+    {
+      "name": "min_temp",
+      "type":"float",
+      "description": "Min predicted temperature of the day."
     },
     {
       "name": "humidity",
       "type":"int",
       "description": "Percentage of humidity. Min is 0 and max is 100."
     },
-    {
-      "name": "wind",
-      "type":"json",
-      "description": "Speed and degree of wind. Keys are: deg and speed."
-    },
+
     {
       "name": "clouds",
       "type":"int",

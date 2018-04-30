@@ -88,8 +88,8 @@ class SqlToCCStream():
                                         dp_sample = []
                                         wd["temperature"] = json.loads(wd["temperature"])
                                         wd["wind"] = json.loads(wd["wind"])
-
-                                        dp_sample = [wd["sunrise"],wd["sunset"],wd.get("wind",float('nan')).get("deg",float('nan')),wd.get("wind",float('nan')).get("speed",float('nan')),wd["temperature"]["temp"],wd["temperature"]["temp_max"],wd["temperature"]["temp_min"],int(wd["humidity"]),int(wd["clouds"]),wd["other"]]
+                                        day_light_duration = ((wd["sunset"]-wd["sunrise"]).seconds)/3600 # difference in hours
+                                        dp_sample = [wd["sunrise"],wd["sunset"],day_light_duration,wd.get("wind",float('nan')).get("deg",float('nan')),wd.get("wind",float('nan')).get("speed",float('nan')),wd["temperature"]["temp"],wd["temperature"]["temp_max"],wd["temperature"]["temp_min"],int(wd["humidity"]),int(wd["clouds"]),wd["other"]]
 
                                         dps.append(DataPoint(wd["start_time"], None, offset, dp_sample))
                                     if len(dps)>0:

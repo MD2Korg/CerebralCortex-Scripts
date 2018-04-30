@@ -12,6 +12,11 @@
       "description": "Time of sunset."
     },
     {
+      "name": "day_light_duration",
+      "type":"float",
+      "description": "Day light duration (sunset-sunrise time) in hours."
+    },
+    {
       "name": "wind_deg",
       "type":"int",
       "description": "Degree of wind."
@@ -45,7 +50,7 @@
     {
       "name": "clouds",
       "type":"int",
-      "description": "Percentage of clouds."
+      "description": "Percentage of clouds. Min is 0 and max is 100."
     },
     {
       "name": "other",

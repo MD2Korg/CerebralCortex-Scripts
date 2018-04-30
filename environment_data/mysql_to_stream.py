@@ -2,6 +2,7 @@ from data_replay.db_helper_methods import SqlData
 import os
 import json
 import yaml
+from decimal import Decimal
 from cerebralcortex.cerebralcortex import CerebralCortex
 from cerebralcortex.core.datatypes.datapoint import DataPoint
 from cerebralcortex.core.datatypes.datastream import DataStream
@@ -88,7 +89,7 @@ class SqlToCCStream():
                                         wd["temperature"] = json.loads(wd["temperature"])
                                         wd["wind"] = json.loads(wd["wind"])
 
-                                        dp_sample = [wd["sunrise"],wd["sunset"],wd.get("wind").get("deg",""),wd.get("wind").get("speed",""),wd["temperature"]["temp"],wd["temperature"]["temp_max"],wd["temperature"]["temp_min"],int(wd["humidity"]),int(wd["clouds"]),wd["other"]]
+                                        dp_sample = [wd["sunrise"],wd["sunset"],wd.get("wind",float('nan')).get("deg",float('nan')),wd.get("wind",float('nan')).get("speed",float('nan')),wd["temperature"]["temp"],wd["temperature"]["temp_max"],wd["temperature"]["temp_min"],int(wd["humidity"]),int(wd["clouds"]),wd["other"]]
 
                                         dps.append(DataPoint(wd["start_time"], None, offset, dp_sample))
                                     if len(dps)>0:

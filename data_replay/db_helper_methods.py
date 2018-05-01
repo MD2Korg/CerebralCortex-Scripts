@@ -150,8 +150,8 @@ class SqlData():
         """
         localtz = timezone("UTC")
 
-        start_time = localtz.localize(start_time)
-        end_time = localtz.localize(end_time)
+        #start_time = localtz.localize(start_time)
+        #end_time = localtz.localize(end_time)
 
         if start_time is not None and start_time!="" and end_time is not None and end_time!="":
             qry = "UPDATE " + self.datastreamTable + " set start_time=%s , end_time=%s where identifier=%s"

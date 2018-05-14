@@ -35,6 +35,7 @@ def all_users_data(study_name: str, csv_output_dir, CC):
 
     if all_users:
         for user in all_users:
+            print("Processing {} - {}".format(user["identifier"], user["user_name"]))
             process(user["identifier"], user["user_name"], csv_output_dir, CC)
     else:
         print(study_name, "- study has 0 users.")
@@ -64,7 +65,7 @@ def get_csv_data(user_id, user_name, stream_name, CC):
             for dp in data:
                 # write data to CSV file
                 # user_name, SurveySentDate, SurveySentTime, StartDate, EndDate, SurveyType, agreeableness.d
-                csv_data += csv_pattern % (user_name, "", "", dp.start_time, dp.end_time, "", dp.sample)
+                csv_data += csv_pattern % (user_name.replace("mperf_",""), "", "", dp.start_time, dp.end_time, "", dp.sample)
 
     return csv_header + "\n" + csv_data
 

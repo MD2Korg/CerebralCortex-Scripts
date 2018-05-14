@@ -73,7 +73,7 @@ def get_csv_data(user_id, user_name, stream_name, CC):
                 csv_data += csv_pattern % (user_name.replace("mperf_",""), "", "", dp.start_time, dp.end_time, "", answer)+"\n"
                 #print(csv_data)
 
-    return csv_header + "\n" + csv_data
+    return csv_data
 
 
 def write_csv_file(file_path, file_name, data):

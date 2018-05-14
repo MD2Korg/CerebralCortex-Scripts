@@ -65,7 +65,7 @@ def get_csv_data(user_id, user_name, stream_name, CC):
 
         for day in days:
             #print(5*"-", "Stream ID {} - Day {}".format(stream_id, day))
-            data = CC.get_stream(stream_id=stream_id, user_id=user_id, day=day)
+            data = CC.get_stream(stream_id=stream_id, user_id=user_id, day=day).data
             for dp in data:
                 # write data to CSV file
                 # user_name, SurveySentDate, SurveySentTime, StartDate, EndDate, SurveyType, agreeableness.d

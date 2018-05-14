@@ -70,7 +70,7 @@ def get_csv_data(user_id, user_name, stream_name, CC):
                 # write data to CSV file
                 # user_name, SurveySentDate, SurveySentTime, StartDate, EndDate, SurveyType, agreeableness.d
                 answer = np.nonzero(dp.sample)[0][0]+1
-                csv_data += csv_pattern % (user_name.replace("mperf_",""), "", "", dp.start_time, dp.end_time, "", dp.sample)+"\n"
+                csv_data += csv_pattern % (user_name.replace("mperf_",""), "", "", dp.start_time, dp.end_time, "", answer)+"\n"
                 #print(csv_data)
 
     return csv_header + "\n" + csv_data

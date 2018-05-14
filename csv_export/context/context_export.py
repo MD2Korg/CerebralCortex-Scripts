@@ -26,6 +26,7 @@
 
 import argparse
 import uuid
+import numpy as np
 
 from cerebralcortex.cerebralcortex import CerebralCortex
 
@@ -68,7 +69,9 @@ def get_csv_data(user_id, user_name, stream_name, CC):
             for dp in data:
                 # write data to CSV file
                 # user_name, SurveySentDate, SurveySentTime, StartDate, EndDate, SurveyType, agreeableness.d
-                csv_data += csv_pattern % (user_name.replace("mperf_",""), "", "", dp.start_time, dp.end_time, "", dp.sample)
+                answer = np.nonzero(dp.sample)[0][0]+1
+                csv_data += csv_pattern % (user_name.replace("mperf_",""), "", "", dp.start_time, dp.end_time, "", dp.sample)+"\n"
+                #print(csv_data)
 
     return csv_header + "\n" + csv_data
 

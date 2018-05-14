@@ -59,9 +59,11 @@ def get_csv_data(user_id, user_name, stream_name, CC):
     csv_pattern = "%s,%s,%s,%s,%s,%s,%s"
     csv_data = ""
     for stream_id in stream_ids:
+        stream_id = stream_id["identifier"]
         days = CC.get_stream_days(stream_id)
-        print(5*"-", "Stream ID {} - Day {}".format(stream_id, day))
+
         for day in days:
+            #print(5*"-", "Stream ID {} - Day {}".format(stream_id, day))
             data = CC.get_stream(stream_id=stream_id, user_id=user_id, day=day)
             for dp in data:
                 # write data to CSV file

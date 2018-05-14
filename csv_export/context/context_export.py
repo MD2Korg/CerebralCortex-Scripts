@@ -79,7 +79,7 @@ def get_csv_data(user_id, user_name, stream_name, CC):
 def write_csv_file(file_path, file_name, data):
     if file_path[-1] != "/":
         file_path += "/"
-    with open(file_path + file_name, "w") as csv_file:
+    with open(file_path + file_name, "a") as csv_file:
         csv_file.write(data)
 
 

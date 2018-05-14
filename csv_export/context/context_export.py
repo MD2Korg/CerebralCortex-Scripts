@@ -35,7 +35,7 @@ def all_users_data(study_name: str, csv_output_dir, CC):
 
     if all_users:
         for user in all_users:
-            print("Processing {} - {}".format(user["identifier"], user["user_name"]))
+            print("Processing {} - {}".format(user["identifier"], user["username"]))
             process(user["identifier"], user["user_name"], csv_output_dir, CC)
     else:
         print(study_name, "- study has 0 users.")
@@ -80,7 +80,7 @@ def write_csv_file(file_path, file_name, data):
 if __name__ == '__main__':
     # create and load CerebralCortex object and configs
     parser = argparse.ArgumentParser(description='CerebralCortex CSV Exporter.')
-    parser.add_argument("-cc", "--cc_config_filepath", help="Configuration file path", required=True)
+    parser.add_argument("-conf", "--cc_config_filepath", help="Configuration file path", required=True)
     parser.add_argument("-op", "--output_path", help="Output path where all CSV files would be stored.", required=True)
 
     args = vars(parser.parse_args())

@@ -46,6 +46,7 @@ class SqlData():
         self.dbUser = self.config['mysql']['db_user']
         self.dbPassword = self.config['mysql']['db_pass']
         self.datastreamTable = self.config['mysql']['datastream_table']
+        self.dataReplayTable = self.config['mysql']['data_replay_table']
         self.kafkaOffsetsTable = self.config['mysql']['kafka_offsets_table']
         self.userTable = self.config['mysql']['user_table']
         self.poolName = self.config['mysql']['connection_pool_name']
@@ -116,7 +117,7 @@ class SqlData():
             return res
 
     def add_to_db(self, owner_id, stream_id, stream_name, day, files_list, dir_size, metadata):
-        qry = "INSERT IGNORE INTO data_replay_md2k2 (owner_id, stream_id, stream_name, day, files_list, dir_size, metadata) VALUES(%s, %s, %s, %s, %s, %s, %s)"
+        qry = "INSERT IGNORE INTO "+self.dataReplayTable+" (owner_id, stream_id, stream_name, day, files_list, dir_size, metadata) VALUES(%s, %s, %s, %s, %s, %s, %s)"
         vals = str(owner_id), str(stream_id), str(stream_name), str(day), json.dumps(files_list), dir_size, json.dumps(metadata)
         self.execute(qry, vals, commit=True)
 
@@ -135,9 +136,9 @@ class SqlData():
             for participant_id in participant_ids:
                 fields += '%s="%s" or ' % ("owner_id", participant_id)
             fields = fields.rstrip(" or")
-            qry = "select * from data_replay_md2k2 where (" + fields +") and "+fields2+" "+fields3+" processed=0"
+            qry = "select * from "+self.dataReplayTable+" where (" + fields +") and "+fields2+" "+fields3+" processed=0"
         else:
-            qry = "select * from data_replay_md2k2 where " + fields2 + " "+fields3+" processed=0 and dir_size<1000000"
+            qry = "select * from "+self.dataReplayTable+" where " + fields2 + " "+fields3+" processed=0 and dir_size<1000000"
 
         return self.execute(qry)
 

@@ -27,10 +27,12 @@ import os
 import json
 import yaml
 import argparse
+import gzip
+from datetime import datetime
 from db_helper_methods import SqlData
 
 class ReplayCerebralCortexData:
-    def __init__(self, users, config):
+    def __init__(self, users, config, scan_type):
         """
         Constructor
         :param configuration:
@@ -54,12 +56,31 @@ class ReplayCerebralCortexData:
         for id in data:
             self.lab_participants.append(id)
 
+        if scan_type=="mperf":
+            self.read_data_dir()
+        elif scan_type=="demo":
+            self.read_demo_dir()
+        else:
+            raise ValueError("Only acceptable parameters for type are mperf OR demo.")
 
-        self.read_data_dir()
+    def read_demo_dir(self):
+        for stream_dir in os.scandir(self.data_dir):
+            file_ext = stream_dir.path[-3:]
+            filename = stream_dir.path
+            if file_ext==".gz":
+                metadata = self.read_json_file(filename.replace(".gz", ".json"))
+                day = self.read_gz_file(filename)
+                owner_id = metadata["owner"]
+                stream_id = metadata["identifier"]
+                stream_name = metadata["name"]
+                files_list = [filename.replace(self.data_dir, "")]
+                self.sqlData.add_to_db(owner_id, stream_id, stream_name, day, files_list, 0, metadata)
+
 
     def read_data_dir(self):
         for stream_dir in os.scandir(self.data_dir):
             if stream_dir.is_dir():
+                metadata = self.read_json_file()
                 owner = stream_dir.path[-36:]
                 if self.users=="all":
                     self.scan_stream_dir(stream_dir)
@@ -90,16 +111,34 @@ class ReplayCerebralCortexData:
                         stream_name = metadata["name"]
                         self.sqlData.add_to_db(owner_id, stream_id, stream_name, day, files_list, dir_size, metadata)
 
+    def read_json_file(self, filename):
+        with open(filename, "r") as jfile:
+            metadata = jfile.read()
+        return json.loads(metadata)
+
+    def read_gz_file(self, filename):
+        with gzip.open(filename, "r") as gzfile:
+            for line in gzfile:
+                day = line.decode("utf-8").split(",")[0]
+                day = datetime.fromtimestamp(int(day)/1000)
+                day = day.strftime('%Y%m%d')
+                break
+        return day
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='CerebralCortex Data Replay')
     parser.add_argument('-users','--users', help='Scan all users directories or only for the list provided in the script.', type=str, default="all", required=False)
     parser.add_argument('-conf','--conf', help='CerebralCortex configuration file', required=True)
+    parser.add_argument('-type','--type', help='Type of directory scan. Demo directory contains all raw/json files in one folder. mperf/demo', default="mperf", required=False)
 
     args = vars(parser.parse_args())
 
     with open(args["conf"]) as ymlfile:
         config = yaml.load(ymlfile)
 
+    scan_type = args["type"]
+    if scan_type!="mperf" and scan_type!="demo":
+        raise ValueError("Only acceptable parameters for type are mperf OR demo.")
 
-    ReplayCerebralCortexData(args["users"],config)
+    ReplayCerebralCortexData(args["users"],config, scan_type)

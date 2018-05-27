@@ -67,8 +67,9 @@ class ReplayCerebralCortexData:
         for stream_dir in os.scandir(self.data_dir):
             file_ext = stream_dir.path[-3:]
             filename = stream_dir.path
-            print("Processing:", filename)
+
             if file_ext==".gz":
+                print("Processing:", filename)
                 metadata = self.read_json_file(filename.replace(".gz", ".json"))
                 day = self.read_gz_file(filename)
                 owner_id = metadata["owner"]

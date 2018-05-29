@@ -28,6 +28,7 @@ import json
 import yaml
 import argparse
 import gzip
+import shutil
 from datetime import datetime
 from db_helper_methods import SqlData
 
@@ -39,6 +40,7 @@ class ReplayCerebralCortexData:
         """
         self.config = config
         self.data_dir = self.config["data_replay"]["data_dir"]
+        self.processed_data_dir = config["data_ingestion"]["filesystem_path"]
         if (self.data_dir[-1] != '/'):
             self.data_dir += '/'
 
@@ -64,6 +66,8 @@ class ReplayCerebralCortexData:
             raise ValueError("Only acceptable parameters for type are mperf OR demo.")
 
     def read_demo_dir(self):
+        shutil.rmtree(self.processed_data_dir)
+        os.makedirs(self.processed_data_dir)
         for stream_dir in os.scandir(self.data_dir):
             file_ext = stream_dir.path[-3:]
             filename = stream_dir.path
@@ -76,7 +80,7 @@ class ReplayCerebralCortexData:
                 stream_id = metadata["identifier"]
                 stream_name = metadata["name"]
                 files_list = [filename.replace(self.data_dir, "")]
-                self.sqlData.add_to_db(owner_id, stream_id, stream_name, day, files_list, 0, metadata)
+                self.sqlData.add_to_db_demo(owner_id, stream_id, stream_name, day, files_list, 0, metadata)
 
 
     def read_data_dir(self):

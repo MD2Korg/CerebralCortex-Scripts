@@ -68,6 +68,7 @@ class ReplayCerebralCortexData:
     def read_demo_dir(self):
         shutil.rmtree(self.processed_data_dir)
         os.makedirs(self.processed_data_dir)
+        self.sqlData.truncate_data_replay_demo()
         for stream_dir in os.scandir(self.data_dir):
             file_ext = stream_dir.path[-3:]
             filename = stream_dir.path

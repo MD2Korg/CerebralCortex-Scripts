@@ -74,7 +74,7 @@ class ReplayCerebralCortexData:
 
             if file_ext==".gz":
                 print("Processing:", filename)
-                metadata = self.read_json_file(filename.replace(".gz", ".json"))
+                metadata = self.read_json_file(filename.replace(".csv.gz", ".json"))
                 day = self.read_gz_file(filename)
                 owner_id = metadata["owner"]
                 stream_id = metadata["identifier"]

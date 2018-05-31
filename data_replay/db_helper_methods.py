@@ -122,7 +122,7 @@ class SqlData():
         self.execute(qry, vals, commit=True)
 
     def add_to_db_demo(self, owner_id, stream_id, stream_name, day, files_list, dir_size, metadata):
-        self.execute("truncate table"+self.dataReplayTable)
+        self.execute("truncate table "+self.dataReplayTable)
         qry = "INSERT IGNORE INTO "+self.dataReplayTable+" (owner_id, stream_id, stream_name, day, files_list, dir_size, metadata) VALUES(%s, %s, %s, %s, %s, %s, %s)"
         vals = str(owner_id), str(stream_id), str(stream_name), str(day), json.dumps(files_list), dir_size, json.dumps(metadata)
         self.execute(qry, vals, commit=True)

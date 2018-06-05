@@ -75,14 +75,17 @@ class ReplayCerebralCortexData:
 
             if file_ext==".gz":
                 print("Processing:", filename)
-                metadata = self.read_json_file(filename.replace(".csv.gz", ".json"))
-                day = self.read_gz_file(filename)
-                owner_id = metadata["owner"]
-                stream_id = metadata["identifier"]
-                stream_name = metadata["name"]
-                files_list = [filename.replace(self.data_dir, "")]
-                self.sqlData.add_to_db_demo(owner_id, stream_id, stream_name, day, files_list, 0, metadata)
-
+                metadata_filename = filename.replace(".csv.gz", ".json")
+                if os.path.exists(metadata_filename):
+                    metadata = self.read_json_file(metadata_filename)
+                    day = self.read_gz_file(filename)
+                    owner_id = metadata["owner"]
+                    stream_id = metadata["identifier"]
+                    stream_name = metadata["name"]
+                    files_list = [filename.replace(self.data_dir, "")]
+                    self.sqlData.add_to_db_demo(owner_id, stream_id, stream_name, day, files_list, 0, metadata)
+                else:
+                    print("Skipping, JSON file is missing: ", metadata_filename)
 
     def read_data_dir(self):
         for stream_dir in os.scandir(self.data_dir):

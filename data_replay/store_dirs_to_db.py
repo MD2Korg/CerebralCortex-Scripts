@@ -90,7 +90,7 @@ class ReplayCerebralCortexData:
     def read_data_dir(self):
         for stream_dir in os.scandir(self.data_dir):
             if stream_dir.is_dir():
-                metadata = self.read_json_file()
+                # metadata = self.read_json_file()
                 owner = stream_dir.path[-36:]
                 if self.users=="all":
                     self.scan_stream_dir(stream_dir)

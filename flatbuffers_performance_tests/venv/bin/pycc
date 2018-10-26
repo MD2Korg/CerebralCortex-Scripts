@@ -1,0 +1,3 @@
+#!/home/tilley/Code/Work/fbpt2/venv/bin/python
+from numba.pycc import main
+main()

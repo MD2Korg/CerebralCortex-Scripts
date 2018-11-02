@@ -1,40 +1,50 @@
-import datetime
-import time
-
 import pandas
 from fastparquet import write
 
 import CCupload.Test.uploadRows
 import CCupload.Test.rowObject
 
-num_of_records = 10000
 
-begin = datetime.datetime.now()
-beginmilli = int(time.mktime(begin.timetuple()) + begin.microsecond / 1000000)
-
-with open('lessNestedflatbuffer_file.dat', 'rb') as f:
-    fbinput = f.read()
-
-uploadRows = CCupload.Test.uploadRows.uploadRows.GetRootAsuploadRows(fbinput, 0)
-
-data = []
-for i in range(0, num_of_records):
-    row = [uploadRows.Rows(i).RowKey(), uploadRows.Rows(i).Datetime(), uploadRows.Rows(i).SampleX(),
-           uploadRows.Rows(i).SampleY(), uploadRows.Rows(i).SampleZ()]
-    data.append(row)
-
-df = pandas.DataFrame(data, columns=['RowKey', 'Timestamp', 'X', 'Y', 'Z'])
-
-mid = datetime.datetime.now()
-midmilli = int(time.mktime(mid.timetuple()) + mid.microsecond / 1000000)
-print("DataFrame created in " + str(midmilli - beginmilli) + " milliseconds.")
-print("Parquet writing started....")
-
-# Write the dataframe to parquet
-write('lessNestedParquet_file.parq', df)
+def open_file(filename):
+    print("Opening flatbuffer...")
+    with open(filename, 'rb') as f:
+        fbinput = f.read()
+    upload_rows = CCupload.Test.uploadRows.uploadRows.GetRootAsuploadRows(fbinput, 0)
+    return upload_rows
 
 
-end = datetime.datetime.now()
-endmilli = int(time.mktime(end.timetuple()) + end.microsecond / 1000000)
-print("Parquet file created in " + str(endmilli - midmilli) + " milliseconds.")
-print("Total time: " + str(endmilli - beginmilli) + " milliseconds.")
+def create_dataframe(upload_rows):
+    print("Creating dataframe...")
+    data = []
+    for i in range(upload_rows.RowsLength()):
+        row = [upload_rows.Rows(i).RowKey(), upload_rows.Rows(i).Datetime(), upload_rows.Rows(i).SampleX(),
+               upload_rows.Rows(i).SampleY(), upload_rows.Rows(i).SampleZ()]
+        data.append(row)
+
+    df = pandas.DataFrame(data, columns=['RowKey', 'Timestamp', 'X', 'Y', 'Z'])
+    return df
+
+
+def write_parquet(df, file_name):
+    print("Parquet writing started....")
+    filename = file_name + '.parq'
+    # Write the dataframe to parquet
+    write(filename, df)
+
+
+def write_parquet_append(df, file_name):
+    print("Parquet appending started...")
+    filename = file_name + '.parq'
+    write(filename, df, append=True)
+
+
+def write_parquet_snappy(df, file_name, num_of_samples):
+    print("Snappy Parquet writing started...")
+    filename = file_name + '.parq'
+    write(filename, df, num_of_samples, "SNAPPY")
+
+
+def write_parquet_gzip(df, file_name, num_of_samples):
+    print("Gzip Parquet writing started...")
+    filename = file_name + '.parq'
+    write(filename, df, num_of_samples, "GZIP")

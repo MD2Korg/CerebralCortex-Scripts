@@ -264,7 +264,9 @@ def appendTestLessNested360KSamples():
     print("One flatbuffer file size is " + str(os.path.getsize(filepaths[0])) + " bytes for " + str(
         num_of_samples) + " rows of data.")
     print("\n")
-
+    345, 624, 770
+    3, 07
+    9, 408
     print("Starting appended Parquet conversion...")
     beginAppendP = datetime.datetime.now()
     rowgroups = [0] * n

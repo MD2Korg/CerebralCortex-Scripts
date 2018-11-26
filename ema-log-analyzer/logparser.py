@@ -118,7 +118,7 @@ def parse_log(input_file):
                 ema_json = json.loads(lsplits[2][1:-1])
                 tmpbuf.append(ema_json)
 
-                #['status', 'current_time', 'timestamp', 'id', 'logSchedule', 'message', 'type', 'operation']
+                #['status'hp, 'current_time', 'timestamp', 'id', 'logSchedule', 'message', 'type', 'operation']
             except Exception as e:
                 print(e)
                 print(lsplits[2][1:-1])
@@ -127,6 +127,7 @@ def parse_log(input_file):
 
     groupedbuf = []
     tmp = []
+    tmptmp = []
     srtts = -1
     ema_started = False
     for l in tmpbuf:
@@ -135,6 +136,10 @@ def parse_log(input_file):
         if 'type' in l and l['type'] == 'PRIVACY' and l['id'] == 'PRIVACY':
             #print('EMA_STARTED')
             ema_started = True
+            if len(tmp):
+                for aa in tmp:
+                    tmptmp.append(aa)
+                tmp = []
             #continue
 
         if ema_started:
@@ -145,8 +150,14 @@ def parse_log(input_file):
         if 'status' in l and (l['status'] == 'COMPLETED' or l['status'] == 'MISSED' or l['status'] == 'ABANDONED_BY_TIMEOUT'):
             #print('EMA_ENDED')
             ema_started = False
-            groupedbuf.append(tmp)
-            tmp = []
+            if len(tmp):
+                groupedbuf.append(tmp)
+                tmp = []
+            if len(tmptmp):
+                tmptmp.append(l)
+                groupedbuf.append(tmptmp)
+                #print(tmptmp)
+                tmptmp = []
 
         #if 'message' in l and l['message'] == 'false: some conditions are failed':
         if 'message' in l and 'false:' in l['message']:
@@ -163,11 +174,12 @@ def parse_log(input_file):
     '''
 
     tab = '\t'
+    dup_list = []
     for x in groupedbuf:
         if not len(x): continue
         csv_entry = userid + tab
         if 'status' in x[-1]:
-            csv_entry += x[-1]['current_time'] + tab+ x[-1]['id'] + tab + x[-1]['status']
+            csv_entry += x[0]['current_time'] + tab+ x[-1]['id'] + tab + x[-1]['status']
         else:
             tmpid = x[-1]['id']
             if 'EMA' not in tmpid:
@@ -213,14 +225,14 @@ def parse_log(input_file):
                 csv_entry += tab + tab 
             #print(repr(csv_entry))
         csv_entry += '\n'
-        csvbuf += csv_entry
+        if csv_entry not in dup_list:
+            csvbuf += csv_entry
+            dup_list.append(csv_entry)
+        else:
+            print('D'*50)
+
         #exit(1)
 
-    '''
-    fo = open('parsed.csv','w')        
-    fo.write(csvbuf)
-    fo.close()
-    '''
     return csvbuf
 
 if __name__ == '__main__':

@@ -2,6 +2,7 @@ from bz2 import BZ2File as bzopen
 import json
 import os
 from datetime import datetime
+import sys
 
 log_files = []
 conditions = []
@@ -197,11 +198,17 @@ def parse_log(input_file):
             csv_entry += x[-1]['current_time'] + tab+ tmpid + tab + 'NOT_DELIVERED'
         allconds = {}
         for cond in x:
+
             if 'status' in cond:
                 continue
+
             condition = cond['type'] + '-' + cond['id']
-            
-            allconds[condition] = cond['message']
+
+            if 'message' not in cond:
+                #print('message missing:', cond)
+                allconds[condition] = cond['emiInfo']
+            else:
+                allconds[condition] = cond['message']
 
         block = -1
         for acond in conditions:
@@ -216,8 +223,12 @@ def parse_log(input_file):
                     if len(blocks) > 1:
                         block = splits[1].split('block(')[1][0]
                 else:
-                    splits = tmpstr.split(':',1)
-                    csv_entry += tab + splits[0].strip() + tab + splits[1].strip()  
+                    try:
+                        splits = tmpstr.split(':',1)
+                        csv_entry += tab + splits[0].strip() + tab + splits[1].strip()  
+                    except:
+                        csv_entry += tab + "" + tab + str(tmpstr)
+                        
             elif acond == 'BLOCK':
                 csv_entry += tab + str(block)
                 continue
@@ -229,7 +240,8 @@ def parse_log(input_file):
             csvbuf += csv_entry
             dup_list.append(csv_entry)
         else:
-            print('D'*50)
+            #print('D'*50)
+            pass
 
         #exit(1)
 
@@ -238,7 +250,7 @@ def parse_log(input_file):
 if __name__ == '__main__':
     gen_usermapping()
 
-    base_dir = '/smb/md2k_lab/Data/Rice'
+    base_dir = sys.argv[1]
     find_files(base_dir)
     #log_files = ['/smb/md2k_lab/Data/Rice/1f879d60-3ccc-3b7a-b522-cbfbea277a9d/1f879d60-3ccc-3b7a-b522-cbfbea277a9d+10505+org.md2k.ema_scheduler+LOG+PHONE.csv.bz2']
     #log_files = ['1f879d60-3ccc-3b7a-b522-cbfbea277a9d+10505+org.md2k.ema_scheduler+LOG+PHONE.csv.bz2']

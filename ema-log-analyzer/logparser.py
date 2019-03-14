@@ -2,10 +2,10 @@ from bz2 import BZ2File as bzopen
 import json
 import os
 from datetime import datetime
-import sys
 
 log_files = []
 conditions = []
+mapping={}
 
 def find_files(basedir):
     subdirs = os.listdir(base_dir)
@@ -19,10 +19,10 @@ def find_files(basedir):
         ufs = os.listdir(sd)
         for f in ufs:
             if 'LOG' in f and 'bz2' in f:
-                log_files.append(os.path.join(sd,f))
+                if os.path.basename(f).split('+',1)[0] in mapping:
+                    log_files.append(os.path.join(sd,f))
 
 
-mapping={}
 def gen_usermapping():
     f = open('mapping.txt','r')
     for l in f:
@@ -82,7 +82,7 @@ def generate_header_row(input_files):
                     groupedbuf.append(tmp)
                 tmp = []
 
-        tab = '\t'
+        tab = ','
         for x in groupedbuf:
             for cond in x:
                 if 'status' in cond:
@@ -174,7 +174,7 @@ def parse_log(input_file):
             print(y)
     '''
 
-    tab = '\t'
+    tab = ','
     dup_list = []
     for x in groupedbuf:
         if not len(x): continue
@@ -198,17 +198,11 @@ def parse_log(input_file):
             csv_entry += x[-1]['current_time'] + tab+ tmpid + tab + 'NOT_DELIVERED'
         allconds = {}
         for cond in x:
-
             if 'status' in cond:
                 continue
-
             condition = cond['type'] + '-' + cond['id']
-
-            if 'message' not in cond:
-                #print('message missing:', cond)
-                allconds[condition] = cond['emiInfo']
-            else:
-                allconds[condition] = cond['message']
+            
+            allconds[condition] = cond['message']
 
         block = -1
         for acond in conditions:
@@ -223,12 +217,8 @@ def parse_log(input_file):
                     if len(blocks) > 1:
                         block = splits[1].split('block(')[1][0]
                 else:
-                    try:
-                        splits = tmpstr.split(':',1)
-                        csv_entry += tab + splits[0].strip() + tab + splits[1].strip()  
-                    except:
-                        csv_entry += tab + "" + tab + str(tmpstr)
-                        
+                    splits = tmpstr.split(':',1)
+                    csv_entry += tab + splits[0].strip() + tab + splits[1].strip()  
             elif acond == 'BLOCK':
                 csv_entry += tab + str(block)
                 continue
@@ -240,8 +230,7 @@ def parse_log(input_file):
             csvbuf += csv_entry
             dup_list.append(csv_entry)
         else:
-            #print('D'*50)
-            pass
+            print('D'*50)
 
         #exit(1)
 
@@ -250,7 +239,7 @@ def parse_log(input_file):
 if __name__ == '__main__':
     gen_usermapping()
 
-    base_dir = sys.argv[1]
+    base_dir = '/smb/md2k_lab/Data/Rice'
     find_files(base_dir)
     #log_files = ['/smb/md2k_lab/Data/Rice/1f879d60-3ccc-3b7a-b522-cbfbea277a9d/1f879d60-3ccc-3b7a-b522-cbfbea277a9d+10505+org.md2k.ema_scheduler+LOG+PHONE.csv.bz2']
     #log_files = ['1f879d60-3ccc-3b7a-b522-cbfbea277a9d+10505+org.md2k.ema_scheduler+LOG+PHONE.csv.bz2']
@@ -266,14 +255,14 @@ if __name__ == '__main__':
         
 
     csvbuf = ''
-    tab = '\t'
+    tab = ','
     csvbuf = 'userid' + tab + 'current_time' + tab + 'id' + tab + 'status'
     for c in expanded_conditions:
         csvbuf += tab + c
 
     csvbuf += '\n'
 
-    fo = open('all_users_parsed.csv','w')
+    fo = open('all_users_parsed_03112019.csv','w')
     fo.write(csvbuf)
     
     for f in log_files:

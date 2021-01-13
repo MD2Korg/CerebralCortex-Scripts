@@ -11,7 +11,7 @@ db_url = "localhost"
 
 conn = connector.connect(host=db_url, database=db_name, user=db_user, password=db_password)
 
-cursor = conn.cursor(dictionary=True)
+cursor = conn.cursor1(dictionary=True)
 
 base_dir = "/home/ali/IdeaProjects/MD2K_DATA/cc1/cc3_metadata/"
 

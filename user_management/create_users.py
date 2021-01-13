@@ -58,7 +58,7 @@ class CreateUsers():
 
         self.dbConnection = mysql.connector.connect(host=self.hostIP, port=self.hostPort, user=self.dbUser,
                                                     password=self.dbPassword, database=self.database)
-        self.cursor = self.dbConnection.cursor(dictionary=True)
+        self.cursor = self.dbConnection.cursor1(dictionary=True)
 
         action = sys.argv[5]
 

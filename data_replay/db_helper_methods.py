@@ -102,7 +102,7 @@ class SqlData():
         """
         # get connection form connection pool instead of create one.
         conn = self.pool.get_connection()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor1(dictionary=True)
         if args:
             cursor.execute(sql, args)
         else:

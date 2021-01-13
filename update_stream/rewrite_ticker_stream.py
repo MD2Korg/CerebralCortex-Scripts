@@ -19,7 +19,7 @@ class UpdateStream():
 
         self.dbConnection = mysql.connector.connect(host=self.hostIP, port=self.hostPort, user=self.dbUser,
                                                     password=self.dbPassword, database=self.database)
-        self.cursor = self.dbConnection.cursor(dictionary=True)
+        self.cursor = self.dbConnection.cursor1(dictionary=True)
 
     def get_participant_ids(self, stream_name):
         qry = "select identifier, owner, name, start_time, end_time from " + self.datastreamTable + " where name like %(name)s"

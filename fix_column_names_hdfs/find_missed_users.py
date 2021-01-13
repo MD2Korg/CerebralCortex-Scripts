@@ -10,7 +10,7 @@ mydb = mysql.connector.connect(
     password="mEm62$%YsoK*88!",
     database="cerebralcortex"
 )
-mycursor = mydb.cursor()
+mycursor = mydb.cursor1()
 
 mycursor.execute("SELECT row_id,user_id,stream_name,file_path,fault_type,fault_description,success,added_date FROM ingestion_logs_md2k_md2k2 group by user_id, stream_name")
 rows = mycursor.fetchall()

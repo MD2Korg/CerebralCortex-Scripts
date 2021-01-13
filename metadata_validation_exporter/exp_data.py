@@ -13,7 +13,7 @@ output_folder_path = "/home/ali/IdeaProjects/MD2K_DATA/metadata_cc_v2/"
 
 conn = connector.connect(host=db_url, database=db_name, user=db_user, password=db_password)
 
-cursor = conn.cursor(dictionary=True)
+cursor = conn.cursor1(dictionary=True)
 
 # cursor.execute("select name, data_descriptor, execution_context, annotations from stream where name not like '%beacon%'  group by name order by name")
 # rows = cursor.fetchall()

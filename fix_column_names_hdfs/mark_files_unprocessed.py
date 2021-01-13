@@ -9,7 +9,7 @@ mydb = mysql.connector.connect(
     password="mEm62$%YsoK*88!",
     database="cerebralcortex"
 )
-mycursor = mydb.cursor()
+mycursor = mydb.cursor1()
 
 qry = 'update ingestion_logs_md2k_md2k2 set fault_type="", fault_description="", success=5 where user_id="038aafca-cc30-47c6-9cbe-5c2cb52d8f04" and stream_name="cu_notif_rm_tickertext--edu.dartmouth.eureka"'
 

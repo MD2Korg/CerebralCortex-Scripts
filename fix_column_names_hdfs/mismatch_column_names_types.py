@@ -23,7 +23,7 @@ df = spark.read.load("/Users/ali/IdeaProjects/MD2K_DATA/hdfs_mismatch_columns/mi
 def add_streamname_column(pdf):
     for index, row in pdf.iterrows():
         lst = row["user_folder"].split("/")
-        stream_name = "/"+lst[1]+"/"+lst[2]+"/"+lst[3]
+        stream_name = "/"+lst[1]+"/"+lst[2]+"/"+lst[3]+"/"+lst[4]
         # if 'stream=accelerometer--org.md2k.motionsense--motion_sense_hrv--right_wrist' in row["user_folder"] and 'ef93c573-b6d1-45e4-b676-cb8517e15974' in row["user_folder"]:
         #     print(row)
         #     print(row["schema"])
@@ -41,7 +41,7 @@ def checkMissMatch(pdf):
     #pdf['schema2'] = pdf.schema.apply(tuple)
     #pdf2 = pdf.sort_values('total_files', ascending=False).drop_duplicates('schema2').drop('schema2',axis=1).reset_index(drop=True)
     pdf2 = pdf
-    pdf2["total_files"] = pdf2.shape[0]
+    #pdf2["total_files"] = pdf2.shape[0]
     pdf2['corrected_schema'] = ""
 
     replace_column_names = {'__index_level_0__':None, "accelerometer_x":"x", "accelerometer_y":"y", "accelerometer_z":"z", "batter_level":"level", "dataquality":"quality", "data_quality_accelerometer":"quality" \
@@ -56,17 +56,16 @@ def checkMissMatch(pdf):
             else:
                 corrected_schema.append(s)
         corrected_schema = list(filter(None, corrected_schema))
-        pdf2.at[index, 'corrected_schema'] = corrected_schema
+        pdf2.at[index, 'schema'] = str(schema)
+        pdf2.at[index, 'corrected_schema'] = str(corrected_schema)
     return pdf2
 
 # add a stream_name (or maybe with version) column so column mismatch could be detected at stream level
 df1 = df.groupBy("user_folder").applyInPandas(add_streamname_column,schema="total_files long, file_name string, schema array<string>, user_folder string, stream_name string")
 
-df2 = df1.groupBy("stream_name").applyInPandas(checkMissMatch,schema="total_files long, file_name string, schema array<string>, user_folder string, stream_name string, corrected_schema array<string>")
+df2 = df1.groupBy("stream_name").applyInPandas(checkMissMatch,schema="total_files long, file_name string, schema string, user_folder string, stream_name string, corrected_schema string")
 
-df3 = df2.groupBy("user_folder").applyInPandas(emptyUDF,schema="total_files long, file_name string, schema array<string>, user_folder string, stream_name string, corrected_schema array<string>")
-
-df3.where("schema!=corrected_schema").repartition(1).write.parquet("/Users/ali/IdeaProjects/MD2K_DATA/hdfs_mismatch_columns/final")
+df2.where("schema!=corrected_schema").repartition(1).write.parquet("/Users/ali/IdeaProjects/MD2K_DATA/hdfs_mismatch_columns/final")
 
 
 

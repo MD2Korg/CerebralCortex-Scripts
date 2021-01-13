@@ -13,7 +13,7 @@ db_url = "localhost"
 
 conn = connector.connect(host=db_url, database=db_name, user=db_user, password=db_password)
 
-cursor = conn.cursor(dictionary=True)
+cursor = conn.cursor1(dictionary=True)
 #cursor = conn.cursor(buffered=True)
 
 def get_study_name():

@@ -3,6 +3,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 from subprocess import PIPE, Popen
 import pandas as pd
+import json
 from pyspark.sql.functions import pandas_udf, PandasUDFType
 from pyspark.sql.types import StructField, StructType, StringType, FloatType, IntegerType, TimestampType
 
@@ -83,15 +84,24 @@ def fix_column_names():
             hdfs.mkdir(new_location)
             for index, row in pdf.iterrows():
                 file_name = "hdfs://dantooine10dot:8020"+row["file_name"]
-                data = pq.read_table(file_name)
-                try:
-                    data2 = data.drop(["__index_level_0__"])
-                except:
-                    data2 = data
-                data3 = data2.rename_columns(row["corrected_schema"])
-                pq.write_table(data3, file_name.replace(old_folder_name,new_folder_name))
+                if hdfs.exists(row["file_name"].replace(old_folder_name,new_folder_name)):
+                    #print("ALREADY PROCESSED - ",row["file_name"].replace(old_folder_name,new_folder_name))
+                    pass
+                else:
+                    data = pq.read_table(file_name)
+                    try:
+                        data2 = data.drop(["__index_level_0__"])
+                    except:
+                        data2 = data
+                    if isinstance(row["corrected_schema"], str):
+                        new_column_names = eval(row["corrected_schema"])
+                    else:
+                        new_column_names = row["corrected_schema"]
+                    data3 = data2.rename_columns(new_column_names)
+                    pq.write_table(data3, file_name.replace(old_folder_name,new_folder_name))
             return pd.DataFrame([[user_folder,1]],columns=['user_folder','success'])
-        except:
+        except Exception as e:
+            print("*"*10, user_folder, str(e))
             return pd.DataFrame([[user_folder,0]],columns=['user_folder','success'])
 
     # read parquet file
@@ -128,5 +138,9 @@ def delete_corrupt_files():
 
     print("Total success", results.where("success=1").count())
 
+# Following sequence to correct files
+# copy_files() # first take backup of corrupt files
+fix_column_names() # fix column names
+# delete_corrupt_files() # delete corrupt files
+# copy_corrected_files() # upload fixed files
 
-copy_corrected_files()

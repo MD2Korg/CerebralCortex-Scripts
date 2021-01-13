@@ -19,12 +19,11 @@ def find_files(basedir):
         ufs = os.listdir(sd)
         for f in ufs:
             if 'LOG' in f and 'bz2' in f:
-                if os.path.basename(f).split('+',1)[0] in mapping:
-                    log_files.append(os.path.join(sd,f))
+                log_files.append(os.path.join(sd,f))
 
 
 def gen_usermapping():
-    f = open('mapping.txt','r')
+    f = open('participant.txt','r')
     for l in f:
         if len(l.strip()):
             lsplts = l.strip().split(',')
@@ -35,7 +34,7 @@ def generate_header_row(input_files):
     tmp_conditions = []
     for input_file in input_files:
         ff = os.path.basename(input_file)
-        userid = mapping[ff.split('+',1)[0]]
+        #userid = mapping[ff.split('+',1)[0]]
         count = 0
         tmpbuf = []
         with bzopen(input_file, "rb") as bzfin:
@@ -103,7 +102,7 @@ def generate_header_row(input_files):
 
 def parse_log(input_file):
     ff = os.path.basename(input_file)
-    userid = mapping[ff.split('+',1)[0]]
+    #userid = mapping[ff.split('+',1)[0]]
     count = 0
     tmpbuf = []
     csvbuf = ''
@@ -177,8 +176,10 @@ def parse_log(input_file):
     tab = ','
     dup_list = []
     for x in groupedbuf:
-        if not len(x): continue
-        csv_entry = userid + tab
+        if not len(x): 
+            continue
+        
+        csv_entry = ''#userid + tab
         if 'status' in x[-1]:
             csv_entry += x[0]['current_time'] + tab+ x[-1]['id'] + tab + x[-1]['status']
         else:
@@ -236,39 +237,70 @@ def parse_log(input_file):
 
     return csvbuf
 
+
+def get_study_day(current, start):
+   d1 = datetime.strptime(start, "%Y/%m/%d")
+   d2 = datetime.strptime(current, "%Y/%m/%d")
+   return abs((d2 - d1).days)
+
+def date_of_month(intime):
+   return (datetime.fromtimestamp(int(intime)).strftime('%Y/%m/%d'))
+
+def insert_unixtime(csvbuf):
+    lines = csvbuf.split('\n')
+    to_return = ''
+    start_timestamp = -1
+    for l in lines:
+        if not len(l) : continue
+
+        splits = l.split(',')
+        timestamp = datetime.strptime(splits[0], '%Y/%m/%d %I:%M:%S %p').timestamp()
+        if start_timestamp == -1:
+            start_timestamp = timestamp
+        study_day = get_study_day(date_of_month(timestamp), date_of_month(start_timestamp)) + 1
+        new_l = str(timestamp) + ',' + str(study_day) + ',' + l + '\n'
+        to_return += new_l
+    return to_return
+
 if __name__ == '__main__':
     gen_usermapping()
 
-    base_dir = '/smb/md2k_lab/Data/Rice'
+    base_dir = '/smb/md2k_lab/Master_Data/Rice'
     find_files(base_dir)
-    #log_files = ['/smb/md2k_lab/Data/Rice/1f879d60-3ccc-3b7a-b522-cbfbea277a9d/1f879d60-3ccc-3b7a-b522-cbfbea277a9d+10505+org.md2k.ema_scheduler+LOG+PHONE.csv.bz2']
-    #log_files = ['1f879d60-3ccc-3b7a-b522-cbfbea277a9d+10505+org.md2k.ema_scheduler+LOG+PHONE.csv.bz2']
-    generate_header_row(log_files)
-
-    expanded_conditions = []
-    for cd in conditions:
-        if cd == 'BLOCK' : 
-            expanded_conditions.append(cd)
-            continue
-        expanded_conditions.append(cd+'--STATUS')
-        expanded_conditions.append(cd+'--CONDITION')
-        
-
-    csvbuf = ''
-    tab = ','
-    csvbuf = 'userid' + tab + 'current_time' + tab + 'id' + tab + 'status'
-    for c in expanded_conditions:
-        csvbuf += tab + c
-
-    csvbuf += '\n'
-
-    fo = open('all_users_parsed_03112019.csv','w')
-    fo.write(csvbuf)
     
+    #for f in [log_files[13]]:
     for f in log_files:
-        print('parsing',f)
+        generate_header_row([f])
+
+        expanded_conditions = []
+        for cd in conditions:
+            if cd == 'BLOCK' : 
+                expanded_conditions.append(cd)
+                continue
+            expanded_conditions.append(cd+'--STATUS')
+            expanded_conditions.append(cd+'--CONDITION')
+            
+
+        csvbuf = ''
+        tab = ','
+        #csvbuf = 'userid' + tab + 'current_time' + tab + 'id' + tab + 'status'
+        csvbuf = 'unixtime' + tab + 'study_day' + tab + 'current_time' + tab + 'id' + tab + 'status'
+        for c in expanded_conditions:
+            csvbuf += tab + c
+
+        csvbuf += '\n'
+
+        out_file_name = f.split('.csv.bz2')[0] + '+analysis.csv'
+        fo = open(out_file_name,'w')
+        fo.write(csvbuf)
+    
+        print('parsing',f, 'writing', out_file_name)
         csvbuf = parse_log(f)
+        csvbuf = insert_unixtime(csvbuf)
         fo.write(csvbuf)
 
-    fo.close()
+        fo.close()
+        conditions = []
+        #break
+    
     print('DONE')

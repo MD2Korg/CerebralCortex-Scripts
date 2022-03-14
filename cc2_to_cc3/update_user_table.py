@@ -7,7 +7,6 @@
 from mysql import connector
 import os
 import json
-import simplejson
 import glob
 import pandas as pd
 from datetime import datetime

@@ -1,0 +1,23 @@
+namespace CCupload.Test;
+
+struct accelData {
+    x:float;
+    y:float;
+    z:float;
+}
+
+table data {
+    datetime:long;
+    sample:accelData;
+}
+
+table row_object {
+    row_key:int;
+    datapoint:data;
+}
+
+table UploadRows {
+    rows:[row_object];
+}
+
+root_type UploadRows;
